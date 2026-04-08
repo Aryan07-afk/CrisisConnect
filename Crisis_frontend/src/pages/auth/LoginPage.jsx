@@ -61,9 +61,6 @@ export default function LoginPage() {
         </p>
 
         <div className="divider" />
-        <p style={{ fontSize: '.72rem', color: 'var(--text3)', textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
-          Demo: admin@crisisconnect.com / admin123
-        </p>
       </div>
     </div>
   );
