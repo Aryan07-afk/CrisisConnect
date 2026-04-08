@@ -50,6 +50,9 @@ const loginUser = async ({ email, password }) => {
     throw err;
   }
 
+  user.lastActiveAt = new Date();
+  await user.save();
+
   const token = generateToken(user._id);
 
   return {

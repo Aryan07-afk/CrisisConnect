@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { dashboardAPI } from '../../api';
+import { dashboardAPI, volunteersAPI, usersAPI } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import PageHeader from '../../components/layout/PageHeader';
 import Badge, { PriorityDot } from '../../components/common/Badge';
@@ -25,10 +25,11 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 export default function DashboardPage() {
-  const { user, canManage, isVolunteer } = useAuth();
+  const { user, canManage, isVolunteer, refreshUser, logout } = useAuth();
   const [stats, setStats]       = useState(null);
   const [activity, setActivity] = useState([]);
   const [loading, setLoading]   = useState(true);
+  const [toggling, setToggling] = useState(false);
 
   useEffect(() => {
     if (isVolunteer) { setLoading(false); return; }
@@ -56,6 +57,42 @@ export default function DashboardPage() {
               <p style={{ color: 'var(--text2)', fontSize: '.9rem', marginBottom: 20 }}>
                 Use the sidebar to manage help requests and your assignments.
               </p>
+
+              <div style={{ marginBottom: 24, padding: '16px', background: 'var(--bg3)', borderRadius: 'var(--r)', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: '.85rem', marginBottom: 8, color: 'var(--text2)' }}>Current Status</div>
+                <div style={{ fontWeight: 700, fontSize: '1.1rem', color: user?.isAvailable ? 'var(--green)' : 'var(--text3)', marginBottom: 12 }}>
+                  {user?.isAvailable ? '● Available for Assignments' : '● Currently Busy'}
+                </div>
+                <button 
+                  className={`btn ${user?.isAvailable ? 'btn-ghost' : 'btn-success'}`}
+                  onClick={async () => {
+                    setToggling(true);
+                    try {
+                      await volunteersAPI.toggleAvailability(user._id);
+                      if (refreshUser) await refreshUser();
+                    } catch (e) { alert(e.response?.data?.message || 'Failed to toggle API'); }
+                    setToggling(false);
+                  }}
+                  disabled={toggling}
+                  style={{ width: '100%', justifyContent: 'center' }}
+                >
+                  {toggling ? 'Updating…' : (user?.isAvailable ? 'Mark as Busy' : 'Mark as Available')}
+                </button>
+                <button 
+                  className="btn btn-ghost mt-2"
+                  style={{ width: '100%', justifyContent: 'center', color: 'var(--red)', border: '1px solid rgba(244,63,94,.2)' }}
+                  onClick={async () => {
+                    if (!window.confirm("Are you sure you want to go deeply Inactive? You will be logged out immediately, and an Admin will need to reactivate your account before you can log in again.")) return;
+                    try {
+                      await usersAPI.update(user._id, { isActive: false });
+                      logout();
+                    } catch (e) { alert(e.response?.data?.message || 'Failed to deactivate account'); }
+                  }}
+                >
+                  Deactivate Account (Long-term Inactive)
+                </button>
+              </div>
+
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
                 <a href="/app/requests" className="btn btn-primary">View Requests</a>
                 <a href="/app/assignments" className="btn btn-ghost">My Assignments</a>

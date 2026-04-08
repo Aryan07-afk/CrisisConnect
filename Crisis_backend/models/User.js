@@ -72,6 +72,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true, // For volunteers
     },
+    lastActiveAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );

@@ -42,7 +42,11 @@ const updateUser = async (targetUserId, requestingUser, body) => {
   }
 
   const allowed = ['name', 'phone', 'organization', 'skills', 'location', 'isAvailable'];
-  if (isAdmin) allowed.push('role', 'isActive');
+  if (isAdmin) {
+    allowed.push('role', 'isActive');
+  } else if (isSelf && body.isActive === false) {
+    allowed.push('isActive');
+  }
 
   const updates = {};
   allowed.forEach((field) => {

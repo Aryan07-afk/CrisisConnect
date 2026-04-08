@@ -20,6 +20,12 @@ const protect = async (req, res, next) => {
     if (!req.user || !req.user.isActive) {
       return res.status(401).json({ success: false, message: 'User not found or deactivated' });
     }
+
+    if (!req.user.lastActiveAt || Date.now() - req.user.lastActiveAt.getTime() > 3600000) {
+      req.user.lastActiveAt = new Date();
+      await req.user.save();
+    }
+
     next();
   } catch (error) {
     return res.status(401).json({ success: false, message: 'Token invalid or expired' });
