@@ -1,58 +1,49 @@
-# CrisisConnect — Frontend (React + Vite)
+# CrisisConnect — Backend API
 
-Production-grade React frontend for the CrisisConnect disaster management platform.
-Built with Vite, React Router v6, Axios, and Recharts. Zero UI library dependencies — fully custom design system.
+Node.js + Express + MongoDB backend for the CrisisConnect disaster management platform.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-crisisconnect-frontend/
-├── index.html
-├── vite.config.js
+crisisconnect-backend/
+├── server.js                  # Entry point
 ├── package.json
+├── .env.example
 │
-└── src/
-    ├── main.jsx                  # Entry point
-    ├── App.jsx                   # Router + auth guards
-    │
-    ├── api/
-    │   ├── axios.js              # Axios instance (JWT + auto-logout)
-    │   └── index.js              # All API call functions
-    │
-    ├── context/
-    │   └── AuthContext.jsx       # Global auth state
-    │
-    ├── styles/
-    │   └── global.css            # Full design system (tokens, layout, components)
-    │
-    ├── components/
-    │   ├── layout/
-    │   │   ├── AppLayout.jsx     # Shell wrapper with Outlet
-    │   │   ├── Sidebar.jsx       # Navigation sidebar
-    │   │   └── PageHeader.jsx    # Topbar with title + actions
-    │   └── common/
-    │       ├── Badge.jsx         # Status/priority badges
-    │       ├── Loader.jsx        # Spinner components
-    │       └── Modal.jsx         # Reusable modal wrapper
-    │
-    └── pages/
-        ├── auth/
-        │   ├── LoginPage.jsx
-        │   ├── RegisterPage.jsx
-        │   └── ProfilePage.jsx
-        ├── dashboard/
-        │   └── DashboardPage.jsx  # Stats, charts, activity feed
-        ├── requests/
-        │   ├── RequestsPage.jsx   # List with filters
-        │   ├── RequestForm.jsx    # Create / edit form
-        │   └── RequestDetail.jsx  # Full detail + notes
-        ├── volunteers/
-        │   ├── VolunteersPage.jsx # Card grid with availability toggle
-        │   └── VolunteerDetail.jsx
-        └── assignments/
-            └── AssignmentsPage.jsx # Timeline view + assign modal
+├── config/
+│   └── db.js                  # MongoDB connection
+│
+├── models/
+│   ├── User.js                # Users (admin / coordinator / volunteer)
+│   ├── HelpRequest.js         # Disaster help requests
+│   └── Assignment.js          # Volunteer ↔ Request assignments
+│
+├── controllers/
+│   ├── auth.controller.js     # Register, login, profile
+│   ├── user.controller.js     # User CRUD (admin)
+│   ├── request.controller.js  # Help request CRUD
+│   ├── volunteer.controller.js# Volunteer management
+│   ├── assignment.controller.js # Assignment logic
+│   └── dashboard.controller.js  # Stats & monitoring
+│
+├── routes/
+│   ├── auth.routes.js
+│   ├── user.routes.js
+│   ├── request.routes.js
+│   ├── volunteer.routes.js
+│   ├── assignment.routes.js
+│   └── dashboard.routes.js
+│
+├── middleware/
+│   ├── auth.middleware.js     # JWT protect + role authorise
+│   └── validate.middleware.js # express-validator error handler
+│
+└── utils/
+    ├── generateToken.js       # JWT generator
+    ├── apiResponse.js         # Standard response helpers
+    └── seeder.js              # Demo data seeder
 ```
 
 ---
@@ -60,47 +51,102 @@ crisisconnect-frontend/
 ## 🚀 Setup
 
 ```bash
-# Install dependencies
+# 1. Install dependencies
 npm install
 
-# Start dev server (proxies /api → localhost:5000)
+# 2. Create .env file
+cp .env.example .env
+# Edit .env with your MongoDB URI and JWT secret
+
+# 3. (Optional) Seed demo data
+node utils/seeder.js
+
+# 4. Start development server
 npm run dev
 
-# Build for production
-npm run build
+# Start production server
+npm start
 ```
 
-> Make sure the backend is running on port 5000 before starting the frontend.
+---
+
+## 🔐 Roles & Permissions
+
+| Role        | Capabilities                                                             |
+|-------------|--------------------------------------------------------------------------|
+| admin       | Full access — manage users, requests, assignments, dashboard             |
+| coordinator | View users, manage requests, assign volunteers, view dashboard           |
+| volunteer   | Create/view own requests, view & update own assignments, toggle availability |
 
 ---
 
-## 🔐 Role-Based UI
+## 📡 API Endpoints
 
-| Role        | Pages Visible                                              |
-|-------------|------------------------------------------------------------|
-| admin       | Dashboard (full stats), Requests, Volunteers, Assignments, Profile |
-| coordinator | Dashboard (full stats), Requests, Volunteers, Assignments, Profile |
-| volunteer   | Dashboard (welcome), Requests (own), Assignments (own), Profile |
+### Auth  `/api/auth`
+| Method | Endpoint            | Access  | Description           |
+|--------|---------------------|---------|-----------------------|
+| POST   | /register           | Public  | Register new user     |
+| POST   | /login              | Public  | Login & get JWT       |
+| GET    | /me                 | Private | Get own profile       |
+| PUT    | /change-password    | Private | Update password       |
+
+### Users  `/api/users`
+| Method | Endpoint              | Access           | Description           |
+|--------|-----------------------|------------------|-----------------------|
+| GET    | /                     | Admin/Coordinator| Get all users         |
+| GET    | /:id                  | Admin/Coordinator| Get user by ID        |
+| PUT    | /:id                  | Self/Admin       | Update user           |
+| PATCH  | /:id/toggle-status    | Admin            | Activate/deactivate   |
+| DELETE | /:id                  | Admin            | Delete user           |
+
+### Help Requests  `/api/requests`
+| Method | Endpoint        | Access   | Description               |
+|--------|-----------------|----------|---------------------------|
+| GET    | /               | Private  | List all (role-filtered)  |
+| GET    | /:id            | Private  | Get single request        |
+| POST   | /               | Private  | Create new request        |
+| PUT    | /:id            | Private  | Update request            |
+| POST   | /:id/notes      | Private  | Add note to request       |
+| DELETE | /:id            | Private  | Delete request            |
+
+### Volunteers  `/api/volunteers`
+| Method | Endpoint              | Access           | Description              |
+|--------|-----------------------|------------------|--------------------------|
+| GET    | /                     | Admin/Coordinator| List all volunteers      |
+| GET    | /:id                  | Self/Admin/Coord | Get volunteer profile    |
+| PATCH  | /:id/availability     | Self/Admin       | Toggle availability      |
+
+### Assignments  `/api/assignments`
+| Method | Endpoint        | Access           | Description               |
+|--------|-----------------|------------------|---------------------------|
+| GET    | /               | Admin/Coordinator| List all assignments      |
+| GET    | /my             | Volunteer        | My assignments            |
+| POST   | /               | Admin/Coordinator| Assign volunteer          |
+| PATCH  | /:id/status     | Volunteer/Admin  | Update assignment status  |
+| DELETE | /:id            | Admin            | Cancel assignment         |
+
+### Dashboard  `/api/dashboard`
+| Method | Endpoint   | Access           | Description        |
+|--------|------------|------------------|--------------------|
+| GET    | /stats     | Admin/Coordinator| Summary stats      |
+| GET    | /activity  | Admin/Coordinator| Recent activity    |
 
 ---
 
-## 🎨 Design System
+## 🔑 Authentication
 
-- **Fonts**: Syne (headings) + Outfit (body) + DM Mono (labels/code)
-- **Theme**: Dark command-center aesthetic — deep navy/slate with amber/orange accents
-- **Colors**: CSS custom properties — no hardcoded hex values in components
-- **No UI library**: Pure CSS design system in `global.css`
-- **Bandwidth-efficient**: No icon library, no heavy dependencies, minimal bundle size
+All protected routes require:
+```
+Authorization: Bearer <your_jwt_token>
+```
 
 ---
 
-## 📦 Dependencies
+## 📦 Tech Stack
 
-| Package          | Purpose                          |
-|------------------|----------------------------------|
-| react            | UI framework                     |
-| react-dom        | DOM rendering                    |
-| react-router-dom | Client-side routing              |
-| axios            | HTTP client with interceptors    |
-| recharts         | Dashboard charts (Bar, Pie)      |
-| vite             | Build tool + dev server          |
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: MongoDB + Mongoose
+- **Auth**: JWT (jsonwebtoken) + bcryptjs
+- **Validation**: express-validator
+- **Logging**: morgan
