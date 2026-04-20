@@ -42,7 +42,7 @@ const updateUser = async (req, res) => {
 // @access Admin
 const toggleUserStatus = async (req, res) => {
   try {
-    const result = await userService.toggleUserStatus(req.params.id);
+    const result = await userService.toggleUserStatus(req.params.id, req.user);
     const label = result.isActive ? 'activated' : 'deactivated';
     return successResponse(res, 200, `User ${label}`, result);
   } catch (error) {
@@ -55,7 +55,7 @@ const toggleUserStatus = async (req, res) => {
 // @access Admin
 const deleteUser = async (req, res) => {
   try {
-    await userService.deleteUser(req.params.id);
+    await userService.deleteUser(req.params.id, req.user);
     return successResponse(res, 200, 'User deleted');
   } catch (error) {
     return errorResponse(res, error.statusCode || 500, error.message);

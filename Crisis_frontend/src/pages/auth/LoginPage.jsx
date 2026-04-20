@@ -47,7 +47,10 @@ export default function LoginPage() {
               placeholder="you@org.com" value={form.email} onChange={handle} required />
           </div>
           <div className="form-group">
-            <label className="form-label">Password</label>
+            <div className="flex-between" style={{ marginBottom: 6 }}>
+              <label className="form-label" style={{ margin: 0 }}>Password</label>
+              <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
+            </div>
             <input className="form-control" type="password" name="password"
               placeholder="••••••••" value={form.password} onChange={handle} required />
           </div>

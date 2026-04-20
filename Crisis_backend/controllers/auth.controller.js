@@ -49,4 +49,28 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe, changePassword };
+// @desc   Forgot password — send reset email
+// @route  POST /api/auth/forgot-password
+// @access Public
+const forgotPassword = async (req, res) => {
+  try {
+    await authService.forgotPassword(req.body.email);
+    return successResponse(res, 200, 'Password reset email sent. Please check your inbox.');
+  } catch (error) {
+    return errorResponse(res, error.statusCode || 500, error.message);
+  }
+};
+
+// @desc   Reset password via token
+// @route  PUT /api/auth/reset-password/:token
+// @access Public
+const resetPassword = async (req, res) => {
+  try {
+    await authService.resetPassword(req.params.token, req.body.password);
+    return successResponse(res, 200, 'Password reset successful. You can now sign in with your new password.');
+  } catch (error) {
+    return errorResponse(res, error.statusCode || 500, error.message);
+  }
+};
+
+module.exports = { register, login, getMe, changePassword, forgotPassword, resetPassword };
