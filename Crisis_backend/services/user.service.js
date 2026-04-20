@@ -32,6 +32,13 @@ const getUserById = async (userId) => {
  * - Admins can additionally update role & isActive.
  */
 const updateUser = async (targetUserId, requestingUser, body) => {
+  const targetDoc = await User.findById(targetUserId);
+  if (!targetDoc) {
+    const err = new Error('User not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
   const isSelf = requestingUser._id.toString() === targetUserId;
   const isAdmin = requestingUser.role === 'admin';
 
@@ -39,6 +46,16 @@ const updateUser = async (targetUserId, requestingUser, body) => {
     const err = new Error('Not authorised to update this user');
     err.statusCode = 403;
     throw err;
+  }
+
+  if (isAdmin && !isSelf && targetDoc.role === 'admin') {
+    const reqLevel = requestingUser.adminLevel || Number.MAX_SAFE_INTEGER;
+    const tgtLevel = targetDoc.adminLevel || Number.MAX_SAFE_INTEGER;
+    if (reqLevel >= tgtLevel) {
+      const err = new Error('You cannot modify a higher or equal ranking admin');
+      err.statusCode = 403;
+      throw err;
+    }
   }
 
   const allowed = ['name', 'phone', 'organization', 'skills', 'location', 'isAvailable'];
@@ -52,6 +69,21 @@ const updateUser = async (targetUserId, requestingUser, body) => {
   allowed.forEach((field) => {
     if (body[field] !== undefined) updates[field] = body[field];
   });
+
+  if (updates.role === 'admin' && targetDoc.role !== 'admin') {
+    updates.adminLevel = (requestingUser.adminLevel || Number.MAX_SAFE_INTEGER) + 1;
+  } else if (updates.role && updates.role !== 'admin' && targetDoc.role === 'admin') {
+    updates.adminLevel = null;
+  }
+
+  // Prevent admin from changing a user's role to victim
+  if (updates.role === 'victim') {
+    if (targetDoc.role !== 'victim') {
+      const err = new Error('Cannot assign the victim role to a user');
+      err.statusCode = 403;
+      throw err;
+    }
+  }
 
   const user = await User.findByIdAndUpdate(targetUserId, updates, {
     new: true,
@@ -69,12 +101,22 @@ const updateUser = async (targetUserId, requestingUser, body) => {
 /**
  * Toggle a user's isActive flag.
  */
-const toggleUserStatus = async (userId) => {
+const toggleUserStatus = async (userId, requestingUser) => {
   const user = await User.findById(userId);
   if (!user) {
     const err = new Error('User not found');
     err.statusCode = 404;
     throw err;
+  }
+
+  if (user.role === 'admin' && user._id.toString() !== requestingUser._id.toString()) {
+    const reqLevel = requestingUser.adminLevel || Number.MAX_SAFE_INTEGER;
+    const tgtLevel = user.adminLevel || Number.MAX_SAFE_INTEGER;
+    if (reqLevel >= tgtLevel) {
+      const err = new Error('You cannot toggle status of a higher or equal ranking admin');
+      err.statusCode = 403;
+      throw err;
+    }
   }
 
   user.isActive = !user.isActive;
@@ -85,13 +127,25 @@ const toggleUserStatus = async (userId) => {
 /**
  * Delete a user by ID.
  */
-const deleteUser = async (userId) => {
-  const user = await User.findByIdAndDelete(userId);
+const deleteUser = async (userId, requestingUser) => {
+  const user = await User.findById(userId);
   if (!user) {
     const err = new Error('User not found');
     err.statusCode = 404;
     throw err;
   }
+
+  if (user.role === 'admin' && user._id.toString() !== requestingUser._id.toString()) {
+    const reqLevel = requestingUser.adminLevel || Number.MAX_SAFE_INTEGER;
+    const tgtLevel = user.adminLevel || Number.MAX_SAFE_INTEGER;
+    if (reqLevel >= tgtLevel) {
+      const err = new Error('You cannot delete a higher or equal ranking admin');
+      err.statusCode = 403;
+      throw err;
+    }
+  }
+
+  await user.deleteOne();
 };
 
 module.exports = { getAllUsers, getUserById, updateUser, toggleUserStatus, deleteUser };

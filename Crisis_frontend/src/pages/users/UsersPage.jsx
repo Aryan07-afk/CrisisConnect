@@ -127,9 +127,11 @@ export default function UsersPage() {
                           onChange={(e) => updateRole(u._id, e.target.value)}
                           disabled={u._id === currentUser?._id || u.role === 'victim'}
                         >
-                          {ROLES.map(r => (
-                            <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
-                          ))}
+                          {ROLES.map(r => {
+                            // Don't show 'victim' as an option to assign if they aren't already one
+                            if (r === 'victim' && u.role !== 'victim') return null;
+                            return <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>;
+                          })}
                         </select>
                       </td>
                       <td>
