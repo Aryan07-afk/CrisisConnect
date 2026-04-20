@@ -25,4 +25,16 @@ const getRecentActivity = async (req, res) => {
   }
 };
 
-module.exports = { getDashboardStats, getRecentActivity };
+// @desc   Get heatmap data for disaster locations
+// @route  GET /api/dashboard/heatmap
+// @access Admin, Coordinator
+const getHeatmapData = async (req, res) => {
+  try {
+    const data = await dashboardService.getHeatmapData();
+    return successResponse(res, 200, 'Heatmap data fetched', data);
+  } catch (error) {
+    return errorResponse(res, error.statusCode || 500, error.message);
+  }
+};
+
+module.exports = { getDashboardStats, getRecentActivity, getHeatmapData };

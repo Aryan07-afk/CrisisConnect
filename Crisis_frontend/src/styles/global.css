@@ -744,3 +744,107 @@ tbody td strong { color: var(--text); font-weight: 600; }
 .leaflet-control-container .leaflet-bottom {
   z-index: 0;
 }
+
+/* ── FORGOT PASSWORD LINK ───────────────────────────── */
+.forgot-link {
+  font-size: .75rem;
+  color: var(--accent) !important;
+  font-weight: 500;
+  transition: color .18s;
+}
+.forgot-link:hover {
+  color: var(--accent-lt) !important;
+  text-decoration: underline;
+}
+
+/* ── HEATMAP CARD ───────────────────────────────────── */
+.heatmap-card {
+  overflow: hidden;
+}
+.heatmap-container {
+  position: relative;
+  height: 380px;
+  border-radius: 0 0 var(--r2) var(--r2);
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+}
+.heatmap-container .leaflet-container {
+  background: var(--bg) !important;
+}
+
+/* Heatmap stats in header */
+.heatmap-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 10px;
+  background: var(--bg3);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+}
+.heatmap-stat-value {
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+}
+.heatmap-stat-label {
+  font-size: .6rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text3);
+}
+
+/* Heatmap legend */
+.heatmap-legend {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 1;
+  background: rgba(14, 20, 32, .92);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 10px 14px;
+  min-width: 160px;
+}
+.heatmap-legend-title {
+  font-size: .65rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text3);
+  display: block;
+  margin-bottom: 6px;
+}
+.heatmap-legend-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #3b82f6, #10b981, #f59e0b, #f97316, #f43f5e);
+  margin-bottom: 4px;
+}
+.heatmap-legend-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: .6rem;
+  color: var(--text3);
+  font-family: var(--font-mono);
+}
+
+/* Empty overlay for heatmap */
+.heatmap-empty-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  pointer-events: none;
+  text-align: center;
+  color: var(--text2);
+  font-size: .88rem;
+}

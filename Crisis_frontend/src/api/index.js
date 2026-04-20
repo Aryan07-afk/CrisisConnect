@@ -6,6 +6,8 @@ export const authAPI = {
   register:       (data) => api.post('/auth/register', data),
   getMe:          ()     => api.get('/auth/me'),
   changePassword: (data) => api.put('/auth/change-password', data),
+  forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  resetPassword:  (token, data) => api.put(`/auth/reset-password/${token}`, data),
 };
 
 // ── USERS ─────────────────────────────────────────────
@@ -47,6 +49,7 @@ export const assignmentsAPI = {
 export const dashboardAPI = {
   getStats:    () => api.get('/dashboard/stats'),
   getActivity: () => api.get('/dashboard/activity'),
+  getHeatmap:  () => api.get('/dashboard/heatmap'),
 };
 
 // ── VICTIM ────────────────────────────────────────────

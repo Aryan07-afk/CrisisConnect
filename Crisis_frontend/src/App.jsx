@@ -5,6 +5,8 @@ import AppLayout from './components/layout/AppLayout';
 import HomePage     from './pages/home/HomePage';
 import LoginPage    from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage  from './pages/auth/ResetPasswordPage';
 import DashboardPage        from './pages/dashboard/DashboardPage';
 import RequestsPage         from './pages/requests/RequestsPage';
 import VolunteersPage       from './pages/volunteers/VolunteersPage';
@@ -53,6 +55,8 @@ export default function App() {
         <Route path="/"         element={<HomePage />} />
         <Route path="/login"    element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+        <Route path="/forgot-password"       element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
+        <Route path="/reset-password/:token" element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
 
         {/* ── Victim public ── */}
         <Route path="/victim/login"    element={<GuestRoute><VictimLoginPage /></GuestRoute>} />

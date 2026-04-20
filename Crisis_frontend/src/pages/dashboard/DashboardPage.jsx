@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { dashboardAPI, volunteersAPI, usersAPI } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import PageHeader from '../../components/layout/PageHeader';
@@ -8,6 +8,8 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const PIE_COLORS = ['#f97316','#f43f5e','#3b82f6','#10b981','#8b5cf6','#f59e0b'];
 
@@ -23,6 +25,162 @@ const CustomTooltip = ({ active, payload }) => {
     </div>
   );
 };
+
+/* ── Heatmap Layer Component ─────────────────────────── */
+function HeatmapLayer({ points }) {
+  const map = useMap();
+  const heatLayerRef = useRef(null);
+
+  useEffect(() => {
+    if (!points || points.length === 0) return;
+
+    import('leaflet').then((LModule) => {
+      window.L = LModule.default || LModule;
+      import('leaflet.heat').then(() => {
+        // Remove previous layer if exists
+        if (heatLayerRef.current) {
+          map.removeLayer(heatLayerRef.current);
+        }
+
+        const heatData = points.map(p => [p.lat, p.lng, p.intensity]);
+
+        heatLayerRef.current = window.L.heatLayer(heatData, {
+          radius: 30,
+          blur: 20,
+          maxZoom: 12,
+          max: 1.0,
+          gradient: {
+            0.0: '#080c12',
+            0.2: '#3b82f6',
+            0.4: '#10b981',
+            0.6: '#f59e0b',
+            0.8: '#f97316',
+            1.0: '#f43f5e',
+          },
+        }).addTo(map);
+      });
+    });
+
+    return () => {
+      if (heatLayerRef.current) {
+        map.removeLayer(heatLayerRef.current);
+      }
+    };
+  }, [points, map]);
+
+  return null;
+}
+
+/* ── Heatmap Card Component ──────────────────────────── */
+function DisasterHeatmap() {
+  const [heatData, setHeatData] = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState('');
+
+  useEffect(() => {
+    dashboardAPI.getHeatmap()
+      .then(res => setHeatData(res.data.data || []))
+      .catch(() => setError('Failed to load heatmap data'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Summary stats from heatmap data
+  const totalPoints   = heatData.length;
+  const criticalCount = heatData.filter(p => p.priority === 'critical').length;
+  const highCount     = heatData.filter(p => p.priority === 'high').length;
+  const totalAffected = heatData.reduce((sum, p) => sum + (p.affected || 0), 0);
+
+  return (
+    <div className="card heatmap-card" style={{ marginBottom: 20 }}>
+      <div className="card-header">
+        <div>
+          <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: '1.1rem' }}>🗺️</span>
+            Disaster Heatmap
+          </div>
+          <div className="card-subtitle">
+            Real-time visualization of disaster locations and intensity
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          {totalPoints > 0 && (
+            <>
+              <div className="heatmap-stat">
+                <span className="heatmap-stat-value">{totalPoints}</span>
+                <span className="heatmap-stat-label">Locations</span>
+              </div>
+              <div className="heatmap-stat">
+                <span className="heatmap-stat-value" style={{ color: 'var(--red)' }}>{criticalCount}</span>
+                <span className="heatmap-stat-label">Critical</span>
+              </div>
+              <div className="heatmap-stat">
+                <span className="heatmap-stat-value" style={{ color: 'var(--yellow)' }}>{highCount}</span>
+                <span className="heatmap-stat-label">High</span>
+              </div>
+              <div className="heatmap-stat">
+                <span className="heatmap-stat-value" style={{ color: 'var(--accent)' }}>{totalAffected}</span>
+                <span className="heatmap-stat-label">Affected</span>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ height: 380, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Loader />
+        </div>
+      ) : error ? (
+        <div className="empty-state" style={{ padding: '40px 0' }}>
+          <p style={{ color: 'var(--red)' }}>{error}</p>
+        </div>
+      ) : (
+        <div className="heatmap-container">
+          <MapContainer
+            center={[22.5, 82.0]}
+            zoom={5}
+            minZoom={4}
+            maxBounds={[
+              [6.5, 68.0],
+              [37.5, 97.5]
+            ]}
+            maxBoundsViscosity={1.0}
+            scrollWheelZoom={true}
+            style={{ height: '100%', width: '100%', borderRadius: '0 0 8px 8px' }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            />
+            <HeatmapLayer points={heatData} />
+          </MapContainer>
+
+          {/* Legend */}
+          <div className="heatmap-legend">
+            <span className="heatmap-legend-title">Intensity</span>
+            <div className="heatmap-legend-bar" />
+            <div className="heatmap-legend-labels">
+              <span>Low</span>
+              <span>Medium</span>
+              <span>High</span>
+              <span>Critical</span>
+            </div>
+          </div>
+
+          {totalPoints === 0 && (
+            <div className="heatmap-empty-overlay">
+              <div style={{ fontSize: '2rem', marginBottom: 8 }}>📍</div>
+              <p>No disaster locations with coordinates yet</p>
+              <p style={{ fontSize: '.75rem', color: 'var(--text3)' }}>
+                Help requests with lat/lng coordinates will appear here
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const { user, canManage, isVolunteer, refreshUser, logout } = useAuth();
@@ -161,6 +319,9 @@ export default function DashboardPage() {
             <div className="stat-sub">of {volunteers?.total ?? 0} total</div>
           </div>
         </div>
+
+        {/* Disaster Heatmap */}
+        <DisasterHeatmap />
 
         {/* Charts Row */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
