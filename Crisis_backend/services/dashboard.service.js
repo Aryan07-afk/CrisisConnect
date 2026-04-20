@@ -78,4 +78,34 @@ const getRecentActivity = async () => {
     .select('title status priority requestType location updatedAt raisedBy assignedTo');
 };
 
-module.exports = { getDashboardStats, getRecentActivity };
+/**
+ * Get heatmap data — disaster locations with intensity based on priority.
+ * Returns coordinates from HelpRequests that have lat/lng.
+ */
+const getHeatmapData = async () => {
+  const INTENSITY_MAP = {
+    critical: 1.0,
+    high: 0.75,
+    medium: 0.5,
+    low: 0.25,
+  };
+
+  const requests = await HelpRequest.find({
+    status: { $in: ['pending', 'assigned', 'in_progress'] },
+    'location.coordinates.lat': { $exists: true, $ne: null },
+    'location.coordinates.lng': { $exists: true, $ne: null },
+  }).select('location.coordinates priority status location.area location.address requestType affectedCount');
+
+  return requests.map((r) => ({
+    lat: r.location.coordinates.lat,
+    lng: r.location.coordinates.lng,
+    intensity: INTENSITY_MAP[r.priority] || 0.5,
+    area: r.location.area || r.location.address,
+    priority: r.priority,
+    status: r.status,
+    type: r.requestType,
+    affected: r.affectedCount,
+  }));
+};
+
+module.exports = { getDashboardStats, getRecentActivity, getHeatmapData };
