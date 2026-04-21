@@ -14,6 +14,7 @@ import AssignmentsPage      from './pages/assignments/AssignmentsPage';
 import ProfilePage          from './pages/auth/ProfilePage';
 import VictimRequestsAdmin  from './pages/victim/VictimRequestsAdmin';
 import UsersPage            from './pages/users/UsersPage';
+import CoordinatorApplicationsPage from './pages/users/CoordinatorApplicationsPage';
 
 import VictimLayout         from './pages/victim/VictimLayout';
 import VictimLoginPage      from './pages/victim/VictimLoginPage';
@@ -84,6 +85,7 @@ export default function App() {
           <Route path="assignments"     element={<AssignmentsPage />} />
           <Route path="victim-requests" element={<VictimRequestsAdmin />} />
           <Route path="users"           element={<PrivateRoute allowedRoles={['admin']}><UsersPage /></PrivateRoute>} />
+          <Route path="coordinator-applications" element={<PrivateRoute allowedRoles={['admin']}><CoordinatorApplicationsPage /></PrivateRoute>} />
           <Route path="profile"         element={<ProfilePage />} />
         </Route>
 

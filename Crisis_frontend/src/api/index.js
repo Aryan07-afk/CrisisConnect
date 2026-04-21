@@ -52,6 +52,16 @@ export const dashboardAPI = {
   getHeatmap:  () => api.get('/dashboard/heatmap'),
 };
 
+// ── COORDINATOR APPLICATIONS ──────────────────────────
+export const coordinatorApplicationsAPI = {
+  submit:    (formData) => api.post('/coordinator-applications', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  getAll:    (params) => api.get('/coordinator-applications', { params }),
+  getById:   (id)     => api.get(`/coordinator-applications/${id}`),
+  review:    (id, data) => api.patch(`/coordinator-applications/${id}/review`, data),
+};
+
 // ── VICTIM ────────────────────────────────────────────
 export const victimAPI = {
   // Victim actions

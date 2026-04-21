@@ -30,6 +30,10 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
+// Serve uploaded files (coordinator document proofs, etc.)
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Request logging
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
@@ -46,6 +50,7 @@ app.use('/api/volunteers',  require('./routes/volunteer.routes'));
 app.use('/api/assignments', require('./routes/assignment.routes'));
 app.use('/api/dashboard',   require('./routes/dashboard.routes'));
 app.use('/api/victim',      require('./routes/victim.routes'));
+app.use('/api/coordinator-applications', require('./routes/coordinatorApplication.routes'));
 
 // Health check
 app.get('/', (req, res) => {

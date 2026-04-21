@@ -177,4 +177,91 @@ const sendPasswordResetEmail = async (user, resetUrl) => {
   }
 };
 
-module.exports = { sendWelcomeEmail, sendPasswordResetEmail };
+/**
+ * Send confirmation email when a coordinator application is received.
+ * @param {Object} user - { name, email }
+ */
+const sendApplicationReceivedEmail = async (user) => {
+  const transporter = createTransporter();
+
+  const html = emailWrapper(`
+    <h2>Application Received! 📋</h2>
+    <p>Hi <strong>${user.name}</strong>, your coordinator application on <strong>CrisisConnect</strong> has been successfully submitted.</p>
+    
+    <div class="info-box">
+      <div class="info-label">Status</div>
+      <div class="info-value" style="color: #f59e0b;">⏳ Under Review</div>
+    </div>
+
+    <p>Our admin team will review your submitted documents and credentials. You will receive an email once your application has been processed.</p>
+    <p>This typically takes <strong>1–3 business days</strong>.</p>
+    
+    <div class="divider"></div>
+    <p class="warning">If you did not submit this application, please ignore this email or contact our support team.</p>
+  `);
+
+  if (!transporter) {
+    console.log(`[Email] Application received email for ${user.email}`);
+    return;
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"CrisisConnect" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: 'Application Received — CrisisConnect 📋',
+      html,
+    });
+    console.log(`[Email] Application received email sent to ${user.email}`);
+  } catch (error) {
+    console.error(`[Email] Failed to send application received email to ${user.email}:`, error.message);
+  }
+};
+
+/**
+ * Send rejection email when a coordinator application is denied.
+ * @param {Object} user - { name, email }
+ * @param {string} reason - Rejection reason provided by admin
+ */
+const sendApplicationRejectedEmail = async (user, reason) => {
+  const transporter = createTransporter();
+
+  const html = emailWrapper(`
+    <h2>Application Update</h2>
+    <p>Hi <strong>${user.name}</strong>, we've reviewed your coordinator application on <strong>CrisisConnect</strong>.</p>
+    
+    <div class="info-box">
+      <div class="info-label">Status</div>
+      <div class="info-value" style="color: #ef4444;">❌ Not Approved</div>
+    </div>
+
+    <div class="info-box">
+      <div class="info-label">Reason</div>
+      <div class="info-value" style="font-size: 14px; font-weight: 400; color: #7a8fb5;">${reason}</div>
+    </div>
+
+    <p>You may submit a new application with updated documents if you believe this was an error. You can also register as a <strong>Volunteer</strong> to start contributing immediately.</p>
+    
+    <div class="divider"></div>
+    <p class="warning">If you have questions, please reach out to our admin team for clarification.</p>
+  `);
+
+  if (!transporter) {
+    console.log(`[Email] Application rejected email for ${user.email}: ${reason}`);
+    return;
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"CrisisConnect" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: 'Application Update — CrisisConnect',
+      html,
+    });
+    console.log(`[Email] Application rejected email sent to ${user.email}`);
+  } catch (error) {
+    console.error(`[Email] Failed to send application rejected email to ${user.email}:`, error.message);
+  }
+};
+
+module.exports = { sendWelcomeEmail, sendPasswordResetEmail, sendApplicationReceivedEmail, sendApplicationRejectedEmail };
