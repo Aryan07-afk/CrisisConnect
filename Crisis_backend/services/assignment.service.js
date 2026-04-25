@@ -9,7 +9,7 @@ const paginate = require('../utils/pagination');
 const createAssignment = async ({ requestId, volunteerId, assignedById }) => {
   const [helpRequest, volunteer] = await Promise.all([
     HelpRequest.findById(requestId),
-    User.findOne({ _id: volunteerId, role: 'volunteer', isActive: true }),
+    User.findOne({ _id: volunteerId, role: 'volunteer', isActive: true, isAvailable: true }),
   ]);
 
   if (!helpRequest) {
@@ -155,12 +155,20 @@ const updateAssignmentStatus = async (assignmentId, requestingUser, { status, re
  * Reverts the help request to pending and frees the volunteer.
  */
 const deleteAssignment = async (assignmentId) => {
-  const assignment = await Assignment.findByIdAndDelete(assignmentId);
+  const assignment = await Assignment.findById(assignmentId);
   if (!assignment) {
     const err = new Error('Assignment not found');
     err.statusCode = 404;
     throw err;
   }
+
+  if (['completed', 'rejected'].includes(assignment.status)) {
+    const err = new Error('Cannot delete a completed or rejected assignment');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  await assignment.deleteOne();
 
   // Revert request to pending
   await HelpRequest.findByIdAndUpdate(assignment.request, {

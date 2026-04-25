@@ -32,8 +32,8 @@ const getAllRequests = async (filters, requestingUser) => {
   if (filters.raisedBy) query.raisedBy = filters.raisedBy;
   if (filters.assignedTo) query.assignedTo = filters.assignedTo;
 
-  // Volunteers can only see their own raised requests
-  if (requestingUser.role === 'volunteer') {
+  // Volunteers and victims can only see their own raised requests
+  if (requestingUser.role === 'volunteer' || requestingUser.role === 'victim') {
     query.raisedBy = requestingUser._id;
   }
 
@@ -86,7 +86,7 @@ const updateRequest = async (requestId, requestingUser, body) => {
   }
 
   const allowedFields = ['title', 'description', 'requestType', 'priority', 'location', 'affectedCount'];
-  if (requestingUser.role !== 'volunteer') allowedFields.push('status', 'assignedTo', 'reviewedBy');
+  if (['admin', 'coordinator'].includes(requestingUser.role)) allowedFields.push('status', 'assignedTo', 'reviewedBy');
 
   allowedFields.forEach((field) => {
     if (body[field] !== undefined) request[field] = body[field];
