@@ -2,6 +2,7 @@ const Assignment = require('../models/Assignment');
 const HelpRequest = require('../models/HelpRequest');
 const User = require('../models/User');
 const paginate = require('../utils/pagination');
+const { sendCriticalAssignmentEmail } = require('./email.service');
 
 /**
  * Assign a volunteer to a help request.
@@ -58,6 +59,11 @@ const createAssignment = async ({ requestId, volunteerId, assignedById }) => {
     { path: 'volunteer', select: 'name email phone' },
     { path: 'assignedBy', select: 'name role' },
   ]);
+
+  // Send email if priority is critical
+  if (helpRequest.priority === 'critical') {
+    sendCriticalAssignmentEmail(volunteer, helpRequest).catch(() => {});
+  }
 
   return assignment;
 };

@@ -264,4 +264,70 @@ const sendApplicationRejectedEmail = async (user, reason) => {
   }
 };
 
-module.exports = { sendWelcomeEmail, sendPasswordResetEmail, sendApplicationReceivedEmail, sendApplicationRejectedEmail };
+/**
+ * Send critical assignment email to volunteer.
+ * @param {Object} user - Volunteer object { name, email }
+ * @param {Object} request - HelpRequest object { title, description, location, contactPhone }
+ */
+const sendCriticalAssignmentEmail = async (user, request) => {
+  const transporter = createTransporter();
+
+  // Format location string if it's an object with address
+  const locationString = request.location?.address || 'Location not provided';
+  // Attempt to use contactPhone if available on the request or the raisedBy user
+  const phoneString = request.contactPhone || (request.raisedBy && request.raisedBy.phone) || 'No contact number provided';
+
+  const html = emailWrapper(`
+    <h2 style="color: #ef4444;">🚨 CRITICAL PRIORITY ASSIGNMENT</h2>
+    <p>Hi <strong>${user.name}</strong>, you have been assigned to a <strong>CRITICAL</strong> priority rescue request. Please review the details below and respond immediately.</p>
+    
+    <div class="info-box" style="border-left: 4px solid #ef4444;">
+      <div class="info-label">Title</div>
+      <div class="info-value" style="color: #ef4444;">${request.title}</div>
+    </div>
+
+    <div class="info-box">
+      <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+        <div>
+          <div class="info-label">Location</div>
+          <div class="info-value">${locationString}</div>
+        </div>
+        <div>
+          <div class="info-label">Victim Contact</div>
+          <div class="info-value" style="color: #f97316;">${phoneString}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <div class="info-label">Specific Instructions / Description</div>
+      <div class="info-value" style="font-size: 14px; font-weight: 400; color: #7a8fb5; line-height: 1.5;">${request.description || 'No description provided'}</div>
+    </div>
+
+    <p style="text-align: center; margin: 28px 0;">
+      <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard" class="btn" style="background: #ef4444; box-shadow: 0 2px 12px rgba(239,68,68,0.3);">View Request Dashboard →</a>
+    </p>
+    
+    <div class="divider"></div>
+    <p class="warning">This is an automated critical alert from CrisisConnect. Please act safely and swiftly.</p>
+  `);
+
+  if (!transporter) {
+    console.log(`[Email] Critical assignment email for ${user.email}: ${request.title}`);
+    return;
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"CrisisConnect Emergency" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: '🚨 URGENT: Critical Assignment — CrisisConnect',
+      html,
+    });
+    console.log(`[Email] Critical assignment email sent to ${user.email}`);
+  } catch (error) {
+    console.error(`[Email] Failed to send critical assignment email to ${user.email}:`, error.message);
+  }
+};
+
+module.exports = { sendWelcomeEmail, sendPasswordResetEmail, sendApplicationReceivedEmail, sendApplicationRejectedEmail, sendCriticalAssignmentEmail };
