@@ -76,6 +76,13 @@ const helpRequestSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
+    escalated: {
+      type: Boolean,
+      default: false,
+    },
+    escalatedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

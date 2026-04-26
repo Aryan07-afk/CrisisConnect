@@ -186,7 +186,82 @@ const deleteAssignment = async (assignmentId) => {
   await User.findByIdAndUpdate(assignment.volunteer, { isAvailable: true });
 };
 
+/**
+ * Calculates Haversine distance in km between two lat/lng points
+ */
+const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+};
+
+/**
+ * Returns a list of best-matching volunteers for a request based on skills and proximity.
+ */
+const findBestMatches = async (requestId) => {
+  const request = await HelpRequest.findById(requestId);
+  if (!request) {
+    const err = new Error('Help request not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  // 1. Get all available volunteers
+  const volunteers = await User.find({ role: 'volunteer', isActive: true, isAvailable: true });
+
+  const reqLat = request.location?.coordinates?.lat;
+  const reqLng = request.location?.coordinates?.lng;
+  const requiredSkill = request.requestType; // e.g., 'medical', 'rescue'
+
+  // 2. Score them
+  const scored = volunteers.map((vol) => {
+    let score = 0;
+    
+    // Skill Match Filter/Score (+50 points)
+    const hasSkill = vol.skills && vol.skills.includes(requiredSkill);
+    if (hasSkill) {
+      score += 50;
+    }
+
+    // Distance Score (Up to 50 points based on proximity)
+    let distanceKm = null;
+    if (reqLat && reqLng && vol.coordinates?.lat && vol.coordinates?.lng) {
+      distanceKm = getDistanceFromLatLonInKm(
+        reqLat, reqLng,
+        vol.coordinates.lat, vol.coordinates.lng
+      );
+      
+      // Inverse distance weighting: 0km = 50 pts, 10km = ~10 pts, >50km = ~0 pts
+      // Example formula: max(0, 50 - distanceKm)
+      score += Math.max(0, 50 - distanceKm);
+    } else {
+      // If no coords available, assume medium distance or zero bonus
+      score += 10;
+    }
+
+    return {
+      volunteer: vol,
+      score,
+      distanceKm,
+      hasSkill
+    };
+  });
+
+  // 3. Sort by score descending
+  scored.sort((a, b) => b.score - a.score);
+
+  return scored.slice(0, 5); // Return top 5
+};
+
 module.exports = {
   createAssignment, getAllAssignments, getMyAssignments,
-  updateAssignmentStatus, deleteAssignment,
+  updateAssignmentStatus, deleteAssignment, findBestMatches,
 };

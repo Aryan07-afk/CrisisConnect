@@ -206,6 +206,8 @@ function AssignModal({ onClose, onSuccess }) {
   const [form, setForm] = useState({ requestId: '', volunteerId: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState('');
+  const [bestMatches, setBestMatches] = useState([]);
+  const [loadingMatches, setLoadingMatches] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -216,6 +218,18 @@ function AssignModal({ onClose, onSuccess }) {
       setVolunteers(v.data.data);
     });
   }, []);
+
+  useEffect(() => {
+    if (!form.requestId) {
+      setBestMatches([]);
+      return;
+    }
+    setLoadingMatches(true);
+    assignmentsAPI.getBestMatch(form.requestId)
+      .then(res => setBestMatches(res.data.data || []))
+      .catch(() => setBestMatches([]))
+      .finally(() => setLoadingMatches(false));
+  }, [form.requestId]);
 
   const submit = async (e) => {
     e.preventDefault(); setError(''); setSaving(true);
@@ -243,10 +257,47 @@ function AssignModal({ onClose, onSuccess }) {
               </option>
             ))}
           </select>
-          {requests.length === 0 && (
+            {requests.length === 0 && (
             <div className="form-error">No pending requests available</div>
           )}
         </div>
+
+        {form.requestId && (
+          <div className="form-group" style={{ background: 'var(--bg3)', padding: 12, borderRadius: 8, border: '1px solid var(--border)' }}>
+            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>⭐ Recommended Best Matches</span>
+              {loadingMatches && <span style={{ fontSize: '.75rem', color: 'var(--text3)' }}>Loading…</span>}
+            </label>
+            {!loadingMatches && bestMatches.length === 0 && (
+              <div style={{ fontSize: '.8rem', color: 'var(--text3)' }}>No specific matches found. You can select any volunteer below.</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+              {bestMatches.map((m, i) => (
+                <div key={m.volunteer._id} 
+                  onClick={() => setForm(f => ({ ...f, volunteerId: m.volunteer._id }))}
+                  style={{ 
+                    display: 'flex', justifyContent: 'space-between', padding: '8px 12px', 
+                    background: form.volunteerId === m.volunteer._id ? 'rgba(244,63,94,0.1)' : 'var(--bg4)', 
+                    border: `1px solid ${form.volunteerId === m.volunteer._id ? 'var(--red)' : 'var(--border2)'}`,
+                    borderRadius: 6, cursor: 'pointer' 
+                  }}>
+                  <div>
+                    <div style={{ fontSize: '.85rem', fontWeight: 600 }}>{m.volunteer.name}</div>
+                    <div style={{ fontSize: '.75rem', color: 'var(--text3)' }}>
+                      Skills: {m.volunteer.skills?.join(', ') || 'General'}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', fontSize: '.75rem' }}>
+                    <div style={{ color: 'var(--green)', fontWeight: 600 }}>Score: {Math.round(m.score)}</div>
+                    <div style={{ color: 'var(--text2)' }}>
+                      {m.distanceKm !== null ? `${m.distanceKm.toFixed(1)} km away` : 'Location unknown'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="form-group">
           <label className="form-label">Available Volunteer *</label>

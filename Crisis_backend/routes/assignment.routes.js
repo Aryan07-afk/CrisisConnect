@@ -7,6 +7,7 @@ const {
   getMyAssignments,
   updateAssignmentStatus,
   deleteAssignment,
+  getBestMatches,
 } = require('../controllers/assignment.controller');
 const { protect, authorise } = require('../middleware/auth.middleware');
 const validate = require('../middleware/validate.middleware');
@@ -15,6 +16,9 @@ router.use(protect);
 
 router.get('/', authorise('admin', 'coordinator'), getAllAssignments);
 router.get('/my', getMyAssignments);
+router.get('/best-match/:requestId', authorise('admin', 'coordinator'), [
+  param('requestId').isMongoId().withMessage('Valid requestId is required')
+], validate, getBestMatches);
 
 router.post(
   '/',

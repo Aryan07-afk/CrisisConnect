@@ -68,7 +68,19 @@ const deleteAssignment = async (req, res) => {
   }
 };
 
+// @desc   Get recommended best matches for a request
+// @route  GET /api/assignments/best-match/:requestId
+// @access Admin, Coordinator
+const getBestMatches = async (req, res) => {
+  try {
+    const matches = await assignmentService.findBestMatches(req.params.requestId);
+    return successResponse(res, 200, 'Best matches fetched', matches);
+  } catch (error) {
+    return errorResponse(res, error.statusCode || 500, error.message);
+  }
+};
+
 module.exports = {
   createAssignment, getAllAssignments, getMyAssignments,
-  updateAssignmentStatus, deleteAssignment,
+  updateAssignmentStatus, deleteAssignment, getBestMatches,
 };

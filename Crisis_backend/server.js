@@ -71,13 +71,21 @@ app.use((err, req, res, next) => {
 // ── Start Server with Graceful Shutdown ────────────────
 const PORT = process.env.PORT || 5000;
 let server;
+let escalationInterval;
+
+const { checkEscalations } = require('./services/escalation.service');
 
 if (process.env.NODE_ENV !== 'test') {
-  server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  server = app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    // Run escalation check every minute
+    escalationInterval = setInterval(checkEscalations, 60000);
+  });
 }
 
 const gracefulShutdown = (signal) => {
   console.log(`\n${signal} received. Shutting down gracefully...`);
+  if (escalationInterval) clearInterval(escalationInterval);
   if (server) {
     server.close(() => {
       const mongoose = require('mongoose');

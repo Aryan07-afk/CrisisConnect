@@ -44,11 +44,16 @@ function HeatmapLayer({ points }) {
 
         const heatData = points.map(p => [p.lat, p.lng, p.intensity]);
 
+        // Calculate max value dynamically based on density
+        // A single critical point is 1.0. To see red, we need a density of ~3.0.
+        // We'll set max to 3.0 so a single point looks blue/green, and clusters look red.
+        const dynamicMax = Math.max(1.0, points.length * 0.15);
+
         heatLayerRef.current = window.L.heatLayer(heatData, {
           radius: 30,
           blur: 20,
           maxZoom: 12,
-          max: 1.0,
+          max: dynamicMax > 5.0 ? 5.0 : 3.0, // cap max to show relative hot spots
           gradient: {
             0.0: '#080c12',
             0.2: '#3b82f6',
@@ -77,11 +82,18 @@ function DisasterHeatmap() {
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
 
-  useEffect(() => {
+  const loadHeatmap = () => {
     dashboardAPI.getHeatmap()
       .then(res => setHeatData(res.data.data || []))
       .catch(() => setError('Failed to load heatmap data'))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadHeatmap();
+    // Poll every 15 seconds
+    const interval = setInterval(loadHeatmap, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   // Summary stats from heatmap data
@@ -189,14 +201,22 @@ export default function DashboardPage() {
   const [loading, setLoading]   = useState(true);
   const [toggling, setToggling] = useState(false);
 
-  useEffect(() => {
-    if (isVolunteer) { setLoading(false); return; }
+  const loadData = () => {
+    if (isVolunteer) return;
     Promise.all([dashboardAPI.getStats(), dashboardAPI.getActivity()])
       .then(([s, a]) => {
         setStats(s.data.data);
         setActivity(a.data.data);
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    if (isVolunteer) { setLoading(false); return; }
+    loadData();
+    // Poll every 15 seconds for updates (including escalated requests)
+    const interval = setInterval(loadData, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) return <><PageHeader title="Dashboard" /><Loader /></>;
@@ -379,14 +399,18 @@ export default function DashboardPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {urgentRequests.map(r => (
                   <div key={r._id} style={{
-                    background: 'var(--bg3)', border: '1px solid var(--border)',
+                    background: r.escalated ? 'rgba(244, 63, 94, 0.1)' : 'var(--bg3)', 
+                    border: `1px solid ${r.escalated ? 'var(--red)' : 'var(--border)'}`,
                     borderRadius: 'var(--r)', padding: '10px 14px'
                   }}>
                     <div className="flex-between mb-1" style={{ marginBottom: 4 }}>
-                      <strong style={{ fontSize: '.88rem' }}>
+                      <strong style={{ fontSize: '.88rem', color: r.escalated ? 'var(--red)' : 'inherit' }}>
                         <PriorityDot priority={r.priority} />{r.title}
                       </strong>
-                      <Badge value={r.priority} />
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        {r.escalated && <span style={{ fontSize: '.7rem', color: '#fff', background: 'var(--red)', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>ESCALATED</span>}
+                        <Badge value={r.priority} />
+                      </div>
                     </div>
                     <div style={{ fontSize: '.75rem', color: 'var(--text3)' }}>
                       📍 {r.location?.area || r.location?.address} &nbsp;·&nbsp;

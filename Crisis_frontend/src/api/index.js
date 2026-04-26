@@ -43,6 +43,7 @@ export const assignmentsAPI = {
   create:       (data)   => api.post('/assignments', data),
   updateStatus: (id, data) => api.patch(`/assignments/${id}/status`, data),
   delete:       (id)     => api.delete(`/assignments/${id}`),
+  getBestMatch: (reqId)  => api.get(`/assignments/best-match/${reqId}`),
 };
 
 // ── DASHBOARD ─────────────────────────────────────────

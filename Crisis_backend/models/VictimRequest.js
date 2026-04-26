@@ -38,6 +38,10 @@ const victimRequestSchema = new mongoose.Schema(
       district: { type: String },
       state:    { type: String },
       landmark: { type: String },
+      coordinates: {
+        lat: { type: Number },
+        lng: { type: Number },
+      },
     },
     // Processing status
     status: {

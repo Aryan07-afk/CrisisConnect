@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { victimAPI } from '../../api';
 import PageHeader from '../../components/layout/PageHeader';
@@ -28,6 +28,22 @@ export default function VictimSubmitRequest() {
   const [coords, setCoords]   = useState(null);
 
   const handle = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+
+  // Automatically fetch GPS coordinates on mount
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCoords({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (err) => console.log('Geolocation error:', err),
+        { enableHighAccuracy: true }
+      );
+    }
+  }, []);
 
   const handleMapSelect = (loc) => {
     setForm(f => ({
@@ -158,6 +174,18 @@ export default function VictimSubmitRequest() {
               <div style={{ fontSize: '.72rem', color: 'var(--text3)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
                 Your Location (where to send help)
               </div>
+              <button type="button" className="btn btn-ghost btn-xs"
+                onClick={() => {
+                  if ('geolocation' in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                      () => alert('Could not get your location. Please check your browser permissions.'),
+                      { enableHighAccuracy: true }
+                    );
+                  }
+                }}>
+                📍 Detect GPS
+              </button>
               <button type="button" className="btn btn-ghost btn-xs"
                 onClick={() => setShowMap(m => !m)}>
                 {showMap ? '✕ Hide Map' : '🗺️ Pick on Map'}
