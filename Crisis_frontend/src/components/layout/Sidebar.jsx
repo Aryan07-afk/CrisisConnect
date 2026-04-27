@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import Logo from '../common/Logo';
 
 const navItems = [
   { to: '/app/dashboard',       icon: 'space_dashboard', label: 'Dashboard',       roles: ['admin','coordinator','volunteer'] },
@@ -14,6 +16,18 @@ const navItems = [
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem('cc_sidebar_collapsed') === 'true'; }
+    catch { return false; }
+  });
+
+  const toggleCollapse = () => {
+    setCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem('cc_sidebar_collapsed', String(next));
+      return next;
+    });
+  };
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -24,10 +38,18 @@ export default function Sidebar() {
   const visible = navItems.filter(n => n.roles.includes(user?.role));
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon material-symbols-outlined">shield</div>
-        <div className="sidebar-logo-text">CrisisConnect</div>
+        <Logo size="normal" link={false} hideText={collapsed} />
+        <button
+          className="sidebar-collapse-btn"
+          onClick={toggleCollapse}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+            {collapsed ? 'chevron_right' : 'chevron_left'}
+          </span>
+        </button>
       </div>
 
       <div className="nav-sections">
@@ -37,6 +59,7 @@ export default function Sidebar() {
             key={item.to}
             to={item.to}
             className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+            title={collapsed ? item.label : undefined}
           >
             <span className="material-symbols-outlined">{item.icon}</span>
             {item.label}
@@ -47,6 +70,7 @@ export default function Sidebar() {
         <NavLink
           to="/app/profile"
           className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+          title={collapsed ? 'My Profile' : undefined}
         >
           <span className="material-symbols-outlined">person</span>
           My Profile

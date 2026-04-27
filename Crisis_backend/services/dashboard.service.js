@@ -108,4 +108,26 @@ const getHeatmapData = async () => {
   }));
 };
 
-module.exports = { getDashboardStats, getRecentActivity, getHeatmapData };
+/**
+ * Get positions of available volunteers for map display.
+ */
+const getVolunteerPositions = async () => {
+  const volunteers = await User.find({
+    role: 'volunteer',
+    isActive: true,
+    isAvailable: true,
+    'coordinates.lat': { $exists: true, $ne: null },
+    'coordinates.lng': { $exists: true, $ne: null },
+  }).select('name skills coordinates location');
+
+  return volunteers.map((v) => ({
+    _id: v._id,
+    name: v.name,
+    skills: v.skills,
+    lat: v.coordinates.lat,
+    lng: v.coordinates.lng,
+    location: v.location,
+  }));
+};
+
+module.exports = { getDashboardStats, getRecentActivity, getHeatmapData, getVolunteerPositions };

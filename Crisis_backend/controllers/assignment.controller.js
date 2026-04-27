@@ -6,13 +6,18 @@ const { successResponse, errorResponse } = require('../utils/apiResponse');
 // @access Admin, Coordinator
 const createAssignment = async (req, res) => {
   try {
-    const { requestId, volunteerId } = req.body;
-    const assignment = await assignmentService.createAssignment({
+    const { requestId, volunteerId, skipSkillCheck } = req.body;
+    const result = await assignmentService.createAssignment({
       requestId,
       volunteerId,
       assignedById: req.user._id,
+      skipSkillCheck,
     });
-    return successResponse(res, 201, 'Volunteer assigned successfully', assignment);
+    // Skill-gating soft block: return warning instead of creating
+    if (result && result.warning) {
+      return successResponse(res, 200, result.message, { warning: true, requiresConfirmation: true });
+    }
+    return successResponse(res, 201, 'Volunteer assigned successfully', result);
   } catch (error) {
     return errorResponse(res, error.statusCode || 500, error.message);
   }
@@ -56,12 +61,12 @@ const updateAssignmentStatus = async (req, res) => {
   }
 };
 
-// @desc   Delete / cancel an assignment (admin only)
+// @desc   Delete / cancel an assignment
 // @route  DELETE /api/assignments/:id
-// @access Admin
+// @access Admin, Coordinator (own assignments only)
 const deleteAssignment = async (req, res) => {
   try {
-    await assignmentService.deleteAssignment(req.params.id);
+    await assignmentService.deleteAssignment(req.params.id, req.user);
     return successResponse(res, 200, 'Assignment cancelled');
   } catch (error) {
     return errorResponse(res, error.statusCode || 500, error.message);

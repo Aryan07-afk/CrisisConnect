@@ -46,7 +46,7 @@ router.patch(
 
 router.delete(
   '/:id',
-  authorise('admin'),
+  authorise('admin', 'coordinator'),
   [param('id').isMongoId().withMessage('Invalid assignment ID')],
   validate,
   deleteAssignment

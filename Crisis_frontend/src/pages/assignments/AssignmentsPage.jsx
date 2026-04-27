@@ -3,18 +3,18 @@ import { assignmentsAPI, requestsAPI, volunteersAPI } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import Badge, { PriorityDot } from '../../components/common/Badge';
 import Loader from '../../components/common/Loader';
-import Modal from '../../components/common/Modal';
+import AssignModal from '../../components/modals/AssignModal';
 
-const STATUSES = ['','assigned','accepted','in_progress','completed','rejected'];
+const STATUSES = ['', 'assigned', 'accepted', 'in_progress', 'completed', 'rejected'];
 
 export default function AssignmentsPage() {
   const { isVolunteer, canManage } = useAuth();
   const [assignments, setAssignments] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [filter, setFilter]     = useState('');
-  const [search, setSearch]     = useState('');
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('');
+  const [search, setSearch] = useState('');
   const [showAssign, setShowAssign] = useState(false);
-  const [error, setError]       = useState('');
+  const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState(null);
 
   const load = useCallback(async () => {
@@ -50,14 +50,14 @@ export default function AssignmentsPage() {
     const title = a.request?.title || '';
     const vname = a.volunteer?.name || '';
     return title.toLowerCase().includes(search.toLowerCase()) ||
-           vname.toLowerCase().includes(search.toLowerCase());
+      vname.toLowerCase().includes(search.toLowerCase());
   });
 
   const nextActions = (status) => {
     const map = {
-      assigned:    [{ label: 'Accept', status: 'accepted', cls: 'success' },
-                    { label: 'Reject', status: 'rejected', cls: 'danger' }],
-      accepted:    [{ label: 'Start', status: 'in_progress', cls: 'primary' }],
+      assigned: [{ label: 'Accept', status: 'accepted', cls: 'success' },
+      { label: 'Reject', status: 'rejected', cls: 'danger' }],
+      accepted: [{ label: 'Start', status: 'in_progress', cls: 'primary' }],
       in_progress: [{ label: 'Complete', status: 'completed', cls: 'success' }],
     };
     return map[status] || [];
@@ -78,7 +78,7 @@ export default function AssignmentsPage() {
           </div>
         )}
       </div>
-      
+
       <div className="page-body page-enter">
         {error && <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger-br)', padding: '12px 16px', borderRadius: 'var(--r-md)' }}>{error}</div>}
 
@@ -112,7 +112,7 @@ export default function AssignmentsPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {filtered.map(a => (
               <div key={a._id} className="card" style={{ padding: '16px 20px', display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
-                
+
                 {/* Left: Request Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
@@ -122,7 +122,7 @@ export default function AssignmentsPage() {
                     </div>
                     <Badge value={a.status} />
                   </div>
-                  
+
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '12px', color: 'var(--t3)' }}>
                     {a.request?.requestType && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -147,7 +147,7 @@ export default function AssignmentsPage() {
                       {new Date(a.createdAt).toLocaleDateString('en-IN')}
                     </div>
                   </div>
-                  
+
                   {a.remarks && (
                     <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--t4)', fontStyle: 'italic', background: 'var(--neutral-bg)', padding: '6px 10px', borderRadius: 'var(--r-sm)' }}>
                       "{a.remarks}"
@@ -157,15 +157,15 @@ export default function AssignmentsPage() {
 
                 {/* Right: Timeline & Actions */}
                 <div style={{ width: '320px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                  
+
                   <div className="tracker-stepper" style={{ marginBottom: '16px', width: '100%', padding: 0 }}>
                     <div className="tracker-line" style={{ left: '20px', right: '20px' }} />
                     <div className="tracker-line tracker-line-fill" style={{ left: '20px', right: '20px', width: ['completed'].includes(a.status) ? '100%' : ['in_progress'].includes(a.status) ? '66%' : ['accepted'].includes(a.status) ? '33%' : '0%' }} />
-                    
+
                     {[
                       { id: 'assigned', label: 'Assigned', done: true },
                       { id: 'accepted', label: 'Accepted', done: !!a.acceptedAt },
-                      { id: 'in_progress', label: 'Started', done: ['in_progress','completed'].includes(a.status) },
+                      { id: 'in_progress', label: 'Started', done: ['in_progress', 'completed'].includes(a.status) },
                       { id: 'completed', label: 'Done', done: a.status === 'completed' }
                     ].map((step, i) => (
                       <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', flex: 1 }}>
@@ -180,7 +180,7 @@ export default function AssignmentsPage() {
                   </div>
 
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    {isVolunteer && nextActions(a.status).map(action => (
+                    {(isVolunteer || canManage) && nextActions(a.status).map(action => (
                       <button
                         key={action.status}
                         className={`btn-${action.cls}`}
@@ -191,7 +191,7 @@ export default function AssignmentsPage() {
                         {actionLoading === a._id + action.status ? '...' : action.label}
                       </button>
                     ))}
-                    {canManage && (
+                    {canManage && !['completed', 'rejected'].includes(a.status) && (
                       <button className="btn-ghost danger" style={{ padding: '6px 14px', fontSize: '12px' }} onClick={() => deleteAssignment(a._id)}>
                         Cancel
                       </button>
@@ -215,105 +215,4 @@ export default function AssignmentsPage() {
   );
 }
 
-/* ── Assign Volunteer Modal ───────────────────────────────── */
-function AssignModal({ onClose, onSuccess }) {
-  const [requests,   setRequests]   = useState([]);
-  const [volunteers, setVolunteers] = useState([]);
-  const [form, setForm] = useState({ requestId: '', volunteerId: '' });
-  const [saving, setSaving] = useState(false);
-  const [error, setError]   = useState('');
-  const [bestMatches, setBestMatches] = useState([]);
-  const [loadingMatches, setLoadingMatches] = useState(false);
 
-  useEffect(() => {
-    Promise.all([
-      requestsAPI.getAll({ status: 'pending' }),
-      volunteersAPI.getAll({ isAvailable: 'true' }),
-    ]).then(([r, v]) => {
-      setRequests(r.data.data.docs || r.data.data);
-      setVolunteers(v.data.data);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!form.requestId) { setBestMatches([]); return; }
-    setLoadingMatches(true);
-    assignmentsAPI.getBestMatch(form.requestId)
-      .then(res => setBestMatches(res.data.data || []))
-      .catch(() => setBestMatches([]))
-      .finally(() => setLoadingMatches(false));
-  }, [form.requestId]);
-
-  const submit = async (e) => {
-    e.preventDefault(); setError(''); setSaving(true);
-    try {
-      await assignmentsAPI.create(form);
-      onSuccess();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Assignment failed');
-    } finally { setSaving(false); }
-  };
-
-  return (
-    <Modal title="Assign Volunteer to Request" onClose={onClose}>
-      <form onSubmit={submit}>
-        {error && <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '10px 14px', borderRadius: 'var(--r-md)', marginBottom: '16px', fontSize: '13px' }}>{error}</div>}
-
-        <div className="form-group" style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--t2)', marginBottom: '6px' }}>Pending Request *</label>
-          <select className="form-control" value={form.requestId} onChange={e => setForm(f => ({ ...f, requestId: e.target.value }))} required>
-            <option value="">— Select request —</option>
-            {requests.map(r => (
-              <option key={r._id} value={r._id}>[{r.priority?.toUpperCase()}] {r.title}</option>
-            ))}
-          </select>
-        </div>
-
-        {form.requestId && (
-          <div style={{ background: 'var(--neutral-bg)', padding: '16px', borderRadius: 'var(--r-md)', border: '1px solid var(--border)', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--t2)' }}>⭐ Recommended Matches</span>
-              {loadingMatches && <span style={{ fontSize: '11px', color: 'var(--t4)' }}>Loading…</span>}
-            </div>
-            {!loadingMatches && bestMatches.length === 0 && (
-              <div style={{ fontSize: '12px', color: 'var(--t4)' }}>No specific matches found.</div>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {bestMatches.map((m) => (
-                <div key={m.volunteer._id} 
-                  onClick={() => setForm(f => ({ ...f, volunteerId: m.volunteer._id }))}
-                  style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: form.volunteerId === m.volunteer._id ? 'var(--brand-bg)' : '#fff', border: `1px solid ${form.volunteerId === m.volunteer._id ? 'var(--brand)' : 'var(--border)'}`, borderRadius: 'var(--r-sm)', cursor: 'pointer' }}>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t1)' }}>{m.volunteer.name}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--t4)' }}>{m.volunteer.skills?.join(', ') || 'General'}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--success)' }}>Score: {Math.round(m.score)}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--t3)' }}>{m.distanceKm !== null ? `${m.distanceKm.toFixed(1)} km` : 'Unknown'}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="form-group" style={{ marginBottom: '24px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--t2)', marginBottom: '6px' }}>Available Volunteer *</label>
-          <select className="form-control" value={form.volunteerId} onChange={e => setForm(f => ({ ...f, volunteerId: e.target.value }))} required>
-            <option value="">— Select volunteer —</option>
-            {volunteers.map(v => (
-              <option key={v._id} value={v._id}>{v.name} ({v.skills?.join(', ') || 'general'})</option>
-            ))}
-          </select>
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-          <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
-          <button type="submit" className="btn-primary" disabled={saving || !form.requestId || !form.volunteerId}>
-            {saving ? 'Assigning…' : 'Assign →'}
-          </button>
-        </div>
-      </form>
-    </Modal>
-  );
-}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { usersAPI, authAPI } from '../../api';
 
@@ -21,6 +21,11 @@ export default function ProfilePage() {
   const toggleSkill = (s) => setForm(f=>({
     ...f, skills: f.skills.includes(s)?f.skills.filter(x=>x!==s):[...f.skills,s]
   }));
+
+  useEffect(() => {
+    refreshUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const saveProfile = async (e) => {
     e.preventDefault(); setMsg(''); setErr(''); setSaving(true);

@@ -51,6 +51,7 @@ export const dashboardAPI = {
   getStats:    () => api.get('/dashboard/stats'),
   getActivity: () => api.get('/dashboard/activity'),
   getHeatmap:  () => api.get('/dashboard/heatmap'),
+  getVolunteerPositions: () => api.get('/dashboard/volunteer-positions'),
 };
 
 // ── COORDINATOR APPLICATIONS ──────────────────────────

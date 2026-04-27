@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import Logo from '../../components/common/Logo';
 
 export default function VictimLayout() {
   const { user, logout } = useAuth();
@@ -15,13 +16,10 @@ export default function VictimLayout() {
     <div className="app-shell">
       {/* Victim Sidebar */}
       <aside className="sidebar" style={{ '--sidebar-accent': 'var(--red)' }}>
-        <div className="sidebar-logo">
-          <div className="logo-mark">
-            <div className="logo-icon" style={{ background: 'var(--red)', boxShadow: '0 0 20px rgba(244,63,94,.3)' }}>🆘</div>
-            <div>
-              <div className="logo-text">CrisisConnect</div>
-              <div className="logo-sub">Victim Portal</div>
-            </div>
+        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', padding: '0 16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <Logo size="normal" link={false} />
+            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--red)', textTransform: 'uppercase', letterSpacing: '0.05em', marginLeft: '38px', marginTop: '-4px' }}>Victim Portal</div>
           </div>
         </div>
 

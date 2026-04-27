@@ -26,9 +26,9 @@ const getVolunteerProfile = async (volunteerId, requestingUser) => {
     throw err;
   }
 
-  const volunteer = await User.findOne({ _id: volunteerId, role: 'volunteer' }).select('-password');
+  const volunteer = await User.findById(volunteerId).select('-password');
   if (!volunteer) {
-    const err = new Error('Volunteer not found');
+    const err = new Error('User not found');
     err.statusCode = 404;
     throw err;
   }

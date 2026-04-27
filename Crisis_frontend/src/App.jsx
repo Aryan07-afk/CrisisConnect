@@ -1,6 +1,7 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AppLayout from './components/layout/AppLayout';
+import { useEffect, useState } from 'react';
 
 import HomePage     from './pages/home/HomePage';
 import LoginPage    from './pages/auth/LoginPage';
@@ -47,50 +48,97 @@ function VictimRoute({ children }) {
   return children;
 }
 
+/* ── Page Transition Wrapper ───────────────────── */
+function PageTransition({ children }) {
+  const location = useLocation();
+  const [displayLocation, setDisplayLocation] = useState(location);
+  const [transitionStage, setTransitionStage] = useState('page-fade-in');
+
+  useEffect(() => {
+    if (location.pathname !== displayLocation.pathname) {
+      setTransitionStage('page-fade-out');
+    }
+  }, [location, displayLocation]);
+
+  return (
+    <div
+      className={transitionStage}
+      onAnimationEnd={() => {
+        if (transitionStage === 'page-fade-out') {
+          setTransitionStage('page-fade-in');
+          setDisplayLocation(location);
+        }
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ── App Routes ──────────────────────────────────────── */
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* ── Public ── */}
+      <Route path="/"         element={<HomePage />} />
+      <Route path="/login"    element={<GuestRoute><LoginPage /></GuestRoute>} />
+      <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+      <Route path="/forgot-password"       element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
+      <Route path="/reset-password/:token" element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
+
+      {/* ── Victim public ── */}
+      <Route path="/victim/login"    element={<GuestRoute><VictimLoginPage /></GuestRoute>} />
+      <Route path="/victim/register" element={<GuestRoute><VictimRegisterPage /></GuestRoute>} />
+
+      {/* ── Victim portal (victim-only) ── */}
+      <Route path="/victim" element={<VictimRoute><VictimLayout /></VictimRoute>}>
+        <Route index element={<Navigate to="/victim/dashboard" replace />} />
+        <Route path="dashboard" element={<VictimDashboard />} />
+        <Route path="submit"    element={<VictimSubmitRequest />} />
+        <Route path="requests"  element={<VictimRequestsPage />} />
+        <Route path="profile"   element={<VictimProfilePage />} />
+      </Route>
+
+      {/* ── Main ops app (admin / coordinator / volunteer) ── */}
+      <Route path="/app" element={
+        <PrivateRoute allowedRoles={['admin','coordinator','volunteer']}>
+          <AppLayout />
+        </PrivateRoute>
+      }>
+        <Route index element={<Navigate to="/app/dashboard" replace />} />
+        <Route path="dashboard"       element={<DashboardPage />} />
+        <Route path="requests"        element={<RequestsPage />} />
+        <Route path="volunteers"      element={<VolunteersPage />} />
+        <Route path="assignments"     element={<AssignmentsPage />} />
+        <Route path="victim-requests" element={<VictimRequestsAdmin />} />
+        <Route path="users"           element={<PrivateRoute allowedRoles={['admin']}><UsersPage /></PrivateRoute>} />
+        <Route path="coordinator-applications" element={<PrivateRoute allowedRoles={['admin']}><CoordinatorApplicationsPage /></PrivateRoute>} />
+        <Route path="profile"         element={<ProfilePage />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
 /* ── App ───────────────────────────────────────────── */
 export default function App() {
+  const location = useLocation();
+
   return (
     <AuthProvider>
-      <Routes>
-        {/* ── Public ── */}
-        <Route path="/"         element={<HomePage />} />
-        <Route path="/login"    element={<GuestRoute><LoginPage /></GuestRoute>} />
-        <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
-        <Route path="/forgot-password"       element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
-        <Route path="/reset-password/:token" element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
+      <PageTransition>
+        <AppRoutes />
+      </PageTransition>
 
-        {/* ── Victim public ── */}
-        <Route path="/victim/login"    element={<GuestRoute><VictimLoginPage /></GuestRoute>} />
-        <Route path="/victim/register" element={<GuestRoute><VictimRegisterPage /></GuestRoute>} />
-
-        {/* ── Victim portal (victim-only) ── */}
-        <Route path="/victim" element={<VictimRoute><VictimLayout /></VictimRoute>}>
-          <Route index element={<Navigate to="/victim/dashboard" replace />} />
-          <Route path="dashboard" element={<VictimDashboard />} />
-          <Route path="submit"    element={<VictimSubmitRequest />} />
-          <Route path="requests"  element={<VictimRequestsPage />} />
-          <Route path="profile"   element={<VictimProfilePage />} />
-        </Route>
-
-        {/* ── Main ops app (admin / coordinator / volunteer) ── */}
-        <Route path="/app" element={
-          <PrivateRoute allowedRoles={['admin','coordinator','volunteer']}>
-            <AppLayout />
-          </PrivateRoute>
-        }>
-          <Route index element={<Navigate to="/app/dashboard" replace />} />
-          <Route path="dashboard"       element={<DashboardPage />} />
-          <Route path="requests"        element={<RequestsPage />} />
-          <Route path="volunteers"      element={<VolunteersPage />} />
-          <Route path="assignments"     element={<AssignmentsPage />} />
-          <Route path="victim-requests" element={<VictimRequestsAdmin />} />
-          <Route path="users"           element={<PrivateRoute allowedRoles={['admin']}><UsersPage /></PrivateRoute>} />
-          <Route path="coordinator-applications" element={<PrivateRoute allowedRoles={['admin']}><CoordinatorApplicationsPage /></PrivateRoute>} />
-          <Route path="profile"         element={<ProfilePage />} />
-        </Route>
-
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      {/* Floating SOS rendered globally but only visible on homepage */}
+      {location.pathname === '/' && (
+        <Link to="/victim/register" className="hp-floating-sos" title="I Need Help">
+          <span className="hp-floating-sos-pulse" />
+          <span style={{ fontSize: '20px' }}>🆘</span>
+          <span className="hp-floating-sos-label">I Need Help</span>
+        </Link>
+      )}
     </AuthProvider>
   );
 }

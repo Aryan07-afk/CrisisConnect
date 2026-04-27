@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { victimAPI, requestsAPI } from '../../api';
 import Loader from '../../components/common/Loader';
 import Modal from '../../components/common/Modal';
+import AssignModal from '../../components/modals/AssignModal';
 
 const STATUS_COLORS = {
   submitted: { bg: 'var(--danger-bg)', color: 'var(--danger)', br: 'var(--danger-br)' },
@@ -28,19 +29,23 @@ export default function VictimRequestsAdmin() {
   const [filters, setFilters]     = useState({ status: '', urgency: '', needType: '' });
   const [search, setSearch]       = useState('');
   const [manageItem, setManageItem] = useState(null);
+  const [assignRequestId, setAssignRequestId] = useState(null);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
+  const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params = {};
+      const params = { page };
       if (filters.status)   params.status   = filters.status;
       if (filters.urgency)  params.urgency  = filters.urgency;
       if (filters.needType) params.needType = filters.needType;
       const { data } = await victimAPI.getAll(params);
       setRequests(data.data.docs);
+      setPagination(data.data.pagination);
     } catch { }
     finally { setLoading(false); }
-  }, [filters]);
+  }, [filters, page]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -109,9 +114,9 @@ export default function VictimRequestsAdmin() {
               <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--t1)', marginBottom: '6px' }}>No victim requests found</div>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
+            <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 220px)', borderRadius: 'var(--r-xl)' }}>
               <table style={{ minWidth: '900px' }}>
-                <thead>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                   <tr>
                     <th>Victim Details</th>
                     <th>Type & Urgency</th>
@@ -169,6 +174,32 @@ export default function VictimRequestsAdmin() {
               </table>
             </div>
           )}
+          
+          {pagination.totalPages > 1 && (
+            <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--hover)' }}>
+              <div style={{ fontSize: '12px', color: 'var(--t3)' }}>
+                Page <strong>{pagination.page}</strong> of {pagination.totalPages}
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  className="btn-ghost" 
+                  style={{ padding: '4px 12px', fontSize: '12px' }} 
+                  disabled={pagination.page <= 1}
+                  onClick={() => setPage(p => p - 1)}
+                >
+                  Previous
+                </button>
+                <button 
+                  className="btn-ghost" 
+                  style={{ padding: '4px 12px', fontSize: '12px' }} 
+                  disabled={pagination.page >= pagination.totalPages}
+                  onClick={() => setPage(p => p + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -177,13 +208,22 @@ export default function VictimRequestsAdmin() {
           request={manageItem}
           onClose={() => setManageItem(null)}
           onSuccess={() => { setManageItem(null); load(); }}
+          onConvertAndAssign={(newReqId) => { setManageItem(null); setAssignRequestId(newReqId); load(); }}
+        />
+      )}
+
+      {assignRequestId && (
+        <AssignModal
+          initialRequestId={assignRequestId}
+          onClose={() => setAssignRequestId(null)}
+          onSuccess={() => { setAssignRequestId(null); load(); }}
         />
       )}
     </>
   );
 }
 
-function ManageModal({ request: r, onClose, onSuccess }) {
+function ManageModal({ request: r, onClose, onSuccess, onConvertAndAssign }) {
   const [form, setForm] = useState({
     status:       r.status,
     responseNote: r.responseNote || '',
@@ -205,6 +245,36 @@ function ManageModal({ request: r, onClose, onSuccess }) {
     } catch (err) {
       setError(err.response?.data?.message || 'Update failed');
     } finally { setSaving(false); }
+  };
+
+  const handleConvertAndAssign = async () => {
+    setError(''); setSaving(true);
+    try {
+      // 1. Create HelpRequest
+      const payload = {
+        title: `SOS from ${r.victim?.name || 'Victim'}`,
+        description: r.description || `SOS Request for ${r.needType}`,
+        requestType: r.needType,
+        priority: r.urgency,
+        affectedCount: Number(r.peopleCount) || 1,
+        location: r.location,
+      };
+      const res = await requestsAPI.create(payload);
+      const newRequestId = res.data.data._id;
+
+      // 2. Update VictimRequest
+      await victimAPI.manage(r._id, {
+        status: 'linked',
+        linkedRequest: newRequestId,
+        responseNote: form.responseNote || 'Help is on the way. A volunteer is being assigned.',
+      });
+
+      // 3. Trigger AssignModal
+      onConvertAndAssign(newRequestId);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Conversion failed');
+      setSaving(false);
+    }
   };
 
   const urgencyConfig = URGENCY_COLORS[r.urgency] || URGENCY_COLORS.low;
@@ -275,7 +345,13 @@ function ManageModal({ request: r, onClose, onSuccess }) {
           />
         </div>
         
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ marginRight: 'auto' }}>
+            <button type="button" className="btn-secondary" onClick={handleConvertAndAssign} disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>assignment_add</span>
+              Convert & Assign
+            </button>
+          </div>
           <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
           <button type="submit" className="btn-primary" disabled={saving}>
             {saving ? 'Saving…' : 'Update Request'}

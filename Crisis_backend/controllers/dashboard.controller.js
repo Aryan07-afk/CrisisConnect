@@ -37,4 +37,16 @@ const getHeatmapData = async (req, res) => {
   }
 };
 
-module.exports = { getDashboardStats, getRecentActivity, getHeatmapData };
+// @desc   Get volunteer positions for map display
+// @route  GET /api/dashboard/volunteer-positions
+// @access Admin, Coordinator
+const getVolunteerPositions = async (req, res) => {
+  try {
+    const data = await dashboardService.getVolunteerPositions();
+    return successResponse(res, 200, 'Volunteer positions fetched', data);
+  } catch (error) {
+    return errorResponse(res, error.statusCode || 500, error.message);
+  }
+};
+
+module.exports = { getDashboardStats, getRecentActivity, getHeatmapData, getVolunteerPositions };

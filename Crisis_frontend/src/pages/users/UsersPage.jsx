@@ -3,6 +3,8 @@ import { usersAPI } from '../../api';
 import Loader from '../../components/common/Loader';
 import Badge from '../../components/common/Badge';
 import { useAuth } from '../../context/AuthContext';
+import Modal from '../../components/common/Modal';
+import VolunteerDetail from '../volunteers/VolunteerDetail';
 
 const ROLES = ['admin', 'coordinator', 'volunteer', 'victim'];
 
@@ -13,6 +15,7 @@ export default function UsersPage() {
   const [filters, setFilters] = useState({ role: '', isActive: '' });
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
+  const [viewItem, setViewItem] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -80,9 +83,9 @@ export default function UsersPage() {
                   <div style={{ fontSize: '13px', color: 'var(--t3)' }}>Adjust your filters to see more results.</div>
                 </div>
               ) : (
-                <div style={{ overflowX: 'auto' }}>
+                <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 200px)', borderRadius: 'var(--r-xl)' }}>
                   <table style={{ minWidth: '700px' }}>
-                    <thead>
+                    <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                       <tr>
                         <th>User</th>
                         <th>Role</th>
@@ -131,6 +134,9 @@ export default function UsersPage() {
                           </td>
                           <td style={{ textAlign: 'right' }}>
                             <div className="table-actions" style={{ justifyContent: 'flex-end' }}>
+                              <button className="btn-icon" onClick={() => setViewItem(u)} title="View Profile">
+                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>visibility</span>
+                              </button>
                               <button className="btn-ghost" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => toggleStatus(u._id)}>
                                 {u.isActive ? 'Deactivate' : 'Activate'}
                               </button>
@@ -197,6 +203,12 @@ export default function UsersPage() {
 
         </div>
       </div>
+
+      {viewItem && (
+        <Modal title="User Profile" onClose={() => setViewItem(null)}>
+          <VolunteerDetail volunteerId={viewItem._id} onClose={() => setViewItem(null)} />
+        </Modal>
+      )}
     </>
   );
 }

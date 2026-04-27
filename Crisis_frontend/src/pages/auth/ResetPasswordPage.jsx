@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../../api';
+import Logo from '../../components/common/Logo';
 
 export default function ResetPasswordPage() {
   const { token } = useParams();
@@ -40,8 +41,9 @@ export default function ResetPasswordPage() {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', background: 'var(--bg)' }}>
       
       <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <div className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--brand)', marginBottom: '16px' }}>password</div>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', marginBottom: '8px' }}>Reset Password</h1>
+        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+          <Logo size="large" link={false} />
+        </div>
         <p style={{ fontSize: '14px', color: 'var(--t3)' }}>Create a new password for your account</p>
       </div>
 

@@ -108,7 +108,7 @@ const getAllVictimRequests = async (filters = {}) => {
   const mongoQuery = VictimRequest.find(query)
     .populate('victim', 'name email phone address district state')
     .populate('linkedRequest', 'title status')
-    .sort({ urgency: -1, createdAt: -1 });
+    .sort({ createdAt: -1 });
 
   return paginate(mongoQuery, { page: filters.page, limit: filters.limit });
 };

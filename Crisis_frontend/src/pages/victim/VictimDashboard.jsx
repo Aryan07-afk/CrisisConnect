@@ -37,6 +37,11 @@ export default function VictimDashboard() {
           <h1>My Dashboard</h1>
           <p>Welcome, {user?.name}. Stay safe.</p>
         </div>
+        <div className="topbar-right">
+          <Link to="/victim/submit" className="btn-primary" style={{ display: 'flex', alignItems: 'center', height: '40px', fontSize: '14px', fontWeight: 600, gap: '8px', background: 'var(--danger)', border: 'none', padding: '0 16px' }}>
+            <span style={{ fontSize: '18px' }}>🆘</span> New SOS Request
+          </Link>
+        </div>
       </div>
       
       <div className="page-body page-enter">
@@ -124,6 +129,12 @@ export default function VictimDashboard() {
                     )}
                   </div>
                 )}
+                
+                <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
+                  <Link to="/victim/submit" className="btn-primary" style={{ display: 'flex', alignItems: 'center', width: '100%', height: '44px', fontSize: '14px', fontWeight: 600, justifyContent: 'center', gap: '8px', background: 'var(--danger)', border: 'none', boxShadow: 'var(--shadow-card)' }}>
+                    <span style={{ fontSize: '18px' }}>🆘</span> New SOS Request
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -156,9 +167,7 @@ export default function VictimDashboard() {
               </div>
             </div>
 
-            <Link to="/victim/submit" className="btn-primary" style={{ display: 'flex', width: '100%', height: '44px', fontSize: '13px', fontWeight: 600, justifyContent: 'center' }}>
-              New SOS Request
-            </Link>
+
           </div>
 
         </div>

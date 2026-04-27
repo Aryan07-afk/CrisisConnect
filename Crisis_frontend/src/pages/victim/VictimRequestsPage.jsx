@@ -38,8 +38,8 @@ export default function VictimRequestsPage() {
         subtitle="All your submitted help requests"
         actions={
           <Link to="/victim/submit" className="btn btn-sm"
-            style={{ background: 'var(--red)', color: '#fff' }}>
-            🆘 New Request
+            style={{ background: 'var(--danger)', color: '#fff', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '20px' }}>🆘</span> New SOS
           </Link>
         }
       />
@@ -49,7 +49,7 @@ export default function VictimRequestsPage() {
             <div className="empty-icon">📭</div>
             <p>You haven't submitted any requests yet</p>
             <Link to="/victim/submit" className="btn btn-sm"
-              style={{ background: 'var(--red)', color: '#fff', marginTop: 14 }}>
+              style={{ background: 'var(--danger)', color: '#fff', marginTop: 14 }}>
               Submit SOS Request →
             </Link>
           </div>

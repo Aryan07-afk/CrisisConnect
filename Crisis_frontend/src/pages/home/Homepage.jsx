@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import Logo from '../../components/common/Logo';
 import './HomePage.css';
 
 /* ── data ──────────────────────────────────────────── */
@@ -198,10 +199,124 @@ function RoleCard({ role, index }) {
   );
 }
 
+/* ── Animated Network Background ──────────────────── */
+function NetworkBackground() {
+  const canvasRef = useRef(null);
+  const animRef = useRef(null);
+  const nodesRef = useRef([]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let w, h;
+
+    const resize = () => {
+      w = canvas.width = canvas.parentElement.offsetWidth;
+      h = canvas.height = canvas.parentElement.offsetHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Create nodes
+    const NODE_COUNT = 50;
+    if (nodesRef.current.length === 0) {
+      for (let i = 0; i < NODE_COUNT; i++) {
+        nodesRef.current.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: (Math.random() - 0.5) * 0.4,
+          r: Math.random() * 2 + 1,
+        });
+      }
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, w, h);
+      const nodes = nodesRef.current;
+
+      // Move nodes
+      nodes.forEach(n => {
+        n.x += n.vx; n.y += n.vy;
+        if (n.x < 0 || n.x > w) n.vx *= -1;
+        if (n.y < 0 || n.y > h) n.vy *= -1;
+      });
+
+      // Draw connections
+      const maxDist = 140;
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < maxDist) {
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.strokeStyle = `rgba(232, 98, 42, ${0.12 * (1 - dist / maxDist)})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw nodes
+      nodes.forEach(n => {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(232, 98, 42, 0.25)';
+        ctx.fill();
+      });
+
+      animRef.current = requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }} />;
+}
+
+/* ── Live Activity Ticker ─────────────────────────── */
+function LiveTicker() {
+  const items = [
+    '🟢 50+ Help Requests Resolved',
+    '🦺 20 Active Volunteers in the Field',
+    '⚡ 3s Average Response Time',
+    '🆘 Real-time SOS Tracking',
+    '📋 100% Request Accountability',
+    '🗺️ Live Disaster Heatmaps',
+    '🔐 Role-Based Secure Access',
+  ];
+  const doubled = [...items, ...items];
+  return (
+    <div className="hp-ticker-wrap">
+      <div className="hp-ticker">
+        {doubled.map((item, i) => (
+          <span key={i} className="hp-ticker-item">{item}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ── main page ───────────────────────────────────────── */
 export default function HomePage() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    try { return localStorage.getItem('cc_dark_mode') === 'true'; } catch { return false; }
+  });
+
+  useEffect(() => {
+    document.body.classList.toggle('dark', darkMode);
+    localStorage.setItem('cc_dark_mode', String(darkMode));
+  }, [darkMode]);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 40);
@@ -221,8 +336,7 @@ export default function HomePage() {
       <nav className={`hp-nav ${scrolled ? 'hp-nav-scrolled' : ''}`}>
         <div className="hp-nav-inner">
           <div className="hp-nav-logo">
-            <span className="hp-nav-logo-icon">🚨</span>
-            <span className="hp-nav-logo-text">CrisisConnect</span>
+            <Logo size="normal" link={false} />
           </div>
           <div className={`hp-nav-links ${menuOpen ? 'open' : ''}`}>
             <button onClick={() => scrollTo('features')}>Features</button>
@@ -231,6 +345,9 @@ export default function HomePage() {
             <button onClick={() => scrollTo('team')}>Team</button>
           </div>
           <div className="hp-nav-actions">
+            <button className="dark-mode-toggle" onClick={() => setDarkMode(d => !d)} title={darkMode ? 'Light Mode' : 'Dark Mode'}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{darkMode ? 'light_mode' : 'dark_mode'}</span>
+            </button>
             <Link to="/login" className="hp-btn-ghost">Sign In</Link>
             <Link to="/register" className="hp-btn-primary">Get Started →</Link>
           </div>
@@ -242,10 +359,9 @@ export default function HomePage() {
 
       {/* ── HERO ── */}
       <section className="hp-hero">
-        <div className="hp-grid-bg" />
+        <NetworkBackground />
         <div className="hp-radial-glow hp-glow-1" />
         <div className="hp-radial-glow hp-glow-2" />
-        <div className="hp-scanline" />
 
         <div className="hp-hero-inner">
           <div className="hp-hero-badge">
@@ -280,14 +396,11 @@ export default function HomePage() {
             </button>
           </div>
 
+          <LiveTicker />
+
           <div className="hp-hero-stats">
             {STATS.map((s, i) => <StatCard key={i} {...s} />)}
           </div>
-        </div>
-
-        <div className="hp-hero-scroll-hint" onClick={() => scrollTo('features')}>
-          <span>scroll</span>
-          <div className="hp-scroll-arrow" />
         </div>
       </section>
 
@@ -331,23 +444,30 @@ export default function HomePage() {
           <div className="hp-section-header">
             <div className="hp-section-tag">How It Works</div>
             <h2 className="hp-section-title">From crisis to resolution</h2>
+            <p className="hp-section-sub">A streamlined 4-step workflow that turns chaos into coordinated action.</p>
           </div>
-          <div className="hp-steps">
+          <div className="hp-timeline">
             {[
-              { n: '01', title: 'Volunteer raises a request', desc: 'An on-field volunteer logs a help request on behalf of victims — specifying type, priority, location and number of people affected.' },
-              { n: '02', title: 'Coordinator reviews & assigns', desc: 'A coordinator reviews the request, sets priority, and assigns an available volunteer with the right skills to handle it.' },
-              { n: '03', title: 'Volunteer accepts & responds', desc: 'The assigned volunteer accepts the task, begins the operation and updates the status in real-time as work progresses.' },
-              { n: '04', title: 'Request resolved & logged', desc: 'Once complete, the request is marked resolved. All activity is logged for accountability and future analysis.' },
-            ].map((step, i) => (
-              <div key={i} className="hp-step">
-                <div className="hp-step-num">{step.n}</div>
-                <div className="hp-step-connector" />
-                <div className="hp-step-body">
-                  <h3>{step.title}</h3>
-                  <p>{step.desc}</p>
+              { n: '01', icon: '📝', title: 'Volunteer raises a request', desc: 'An on-field volunteer logs a help request on behalf of victims — specifying type, priority, location and number of people affected.', color: '#2f88ff' },
+              { n: '02', icon: '🎯', title: 'Coordinator reviews & assigns', desc: 'A coordinator reviews the request, sets priority, and assigns an available volunteer with the right skills to handle it.', color: '#10b981' },
+              { n: '03', icon: '🦺', title: 'Volunteer accepts & responds', desc: 'The assigned volunteer accepts the task, begins the operation and updates the status in real-time as work progresses.', color: '#f59e0b' },
+              { n: '04', icon: '✅', title: 'Request resolved & logged', desc: 'Once complete, the request is marked resolved. All activity is logged for accountability and future analysis.', color: '#8b5cf6' },
+            ].map((step, i) => {
+              const [ref, inView] = useInView();
+              return (
+                <div key={i} ref={ref} className={`hp-tl-item ${inView ? 'hp-in' : ''} ${i % 2 === 0 ? 'hp-tl-left' : 'hp-tl-right'}`} style={{ '--delay': `${i * 150}ms`, '--accent': step.color }}>
+                  <div className="hp-tl-dot" style={{ background: step.color }}>
+                    <span>{step.icon}</span>
+                  </div>
+                  <div className="hp-tl-card">
+                    <div className="hp-tl-num" style={{ color: step.color }}>{step.n}</div>
+                    <h3 className="hp-tl-title">{step.title}</h3>
+                    <p className="hp-tl-desc">{step.desc}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+            <div className="hp-tl-line" />
           </div>
         </div>
       </section>
@@ -381,30 +501,55 @@ export default function HomePage() {
       {/* ── ABOUT ── */}
       <section id="about" className="hp-section hp-about">
         <div className="hp-container">
-          <div className="hp-about-grid" style={{ gridTemplateColumns: '1fr' }}>
-            <div className="hp-about-left" style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
-              <div className="hp-section-tag">About the Project</div>
-              <h2 className="hp-section-title" style={{ textAlign: 'center', maxWidth: '100%' }}>
-                Built for the field, not the boardroom.
-              </h2>
-              <p>
-                CrisisConnect is developed by Team CrisisCoders. It is a fully functional
+          <div className="hp-section-header">
+            <div className="hp-section-tag">About the Project</div>
+            <h2 className="hp-section-title">Built for the field, not the boardroom.</h2>
+          </div>
+          <div className="hp-about-grid-v2">
+            <div className="hp-about-content">
+              <p style={{ fontSize: '15px', lineHeight: 1.7, color: 'var(--t2)', marginBottom: '16px' }}>
+                CrisisConnect is developed by <strong style={{ color: 'var(--t1)' }}>Team CrisisCoders</strong>. It is a fully functional
                 MERN stack web application designed as a prototype for disaster
                 management coordination.
               </p>
-              <p>
+              <p style={{ fontSize: '15px', lineHeight: 1.7, color: 'var(--t2)', marginBottom: '24px' }}>
                 The platform prioritises practicality — it is lightweight, structured,
                 and designed so that relief operations can be coordinated even in
                 areas with poor internet connectivity.
               </p>
-              <div className="hp-about-tags" style={{ justifyContent: 'center' }}>
+              <div className="hp-about-tags" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {['MERN Stack','JWT Auth','Role-Based Access','MongoDB','RESTful API','React + Vite'].map(t => (
                   <span key={t} className="hp-tag">{t}</span>
                 ))}
               </div>
             </div>
+            <div className="hp-about-stats-card">
+              <div className="hp-about-stat-row">
+                <div className="hp-about-stat-item">
+                  <div className="hp-about-stat-num">4</div>
+                  <div className="hp-about-stat-label">User Roles</div>
+                </div>
+                <div className="hp-about-stat-item">
+                  <div className="hp-about-stat-num">7+</div>
+                  <div className="hp-about-stat-label">Relief Types</div>
+                </div>
+              </div>
+              <div className="hp-about-stat-row">
+                <div className="hp-about-stat-item">
+                  <div className="hp-about-stat-num">24/7</div>
+                  <div className="hp-about-stat-label">Availability</div>
+                </div>
+                <div className="hp-about-stat-item">
+                  <div className="hp-about-stat-num">100%</div>
+                  <div className="hp-about-stat-label">Open Source</div>
+                </div>
+              </div>
+              <div style={{ marginTop: '16px', padding: '12px 16px', background: 'rgba(232,98,42,0.08)', borderRadius: 'var(--r-md)', textAlign: 'center' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--brand)' }}>🔥 Built with passion for disaster relief</span>
               </div>
             </div>
+          </div>
+        </div>
       </section>
 
       {/* ── TEAM ── */}
@@ -417,18 +562,26 @@ export default function HomePage() {
              One mission. Zero disasters left uncoordinated.
             </p>
           </div>
-          <div className="hp-team-grid">
-            {TEAM.map((m, i) => (
-              <div key={i} className="hp-team-card">
-                <div className="hp-team-avatar">
-                  {m.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+          <div className="hp-team-grid-v2">
+            {TEAM.map((m, i) => {
+              const [ref, inView] = useInView();
+              const colors = ['#2f88ff', '#10b981', '#f59e0b'];
+              return (
+                <div key={i} ref={ref} className={`hp-team-card-v2 ${inView ? 'hp-in' : ''}`} style={{ '--delay': `${i * 120}ms`, '--tc': colors[i % 3] }}>
+                  <div className="hp-team-card-glow" />
+                  <div className="hp-team-avatar-v2" style={{ background: `linear-gradient(135deg, ${colors[i % 3]}, ${colors[(i + 1) % 3]})` }}>
+                    {m.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </div>
+                  <div className="hp-team-name-v2">{m.name}</div>
+                  <div className="hp-team-role-v2">{m.role}</div>
+                  <div className="hp-team-divider" />
+                  <a href={`mailto:${m.email}`} className="hp-team-email-v2">
+                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>mail</span>
+                    {m.email}
+                  </a>
                 </div>
-                <div className="hp-team-name">{m.name}</div>
-                <div className="hp-team-role">{m.role}</div>
-                <div className="hp-team-id">#{m.id}</div>
-                <a href={`mailto:${m.email}`} className="hp-team-email">{m.email}</a>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -453,8 +606,7 @@ export default function HomePage() {
           <div className="hp-footer-grid">
             <div className="hp-footer-brand">
               <div className="hp-nav-logo" style={{ marginBottom: 12 }}>
-                <span className="hp-nav-logo-icon">🚨</span>
-                <span className="hp-nav-logo-text">CrisisConnect</span>
+                <Logo size="normal" link={false} />
               </div>
               <p>Linking help, saving lives. A disaster management coordination platform built on the MERN stack.</p>
             </div>

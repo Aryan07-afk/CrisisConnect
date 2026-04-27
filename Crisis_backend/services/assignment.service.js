@@ -7,7 +7,7 @@ const { sendCriticalAssignmentEmail } = require('./email.service');
 /**
  * Assign a volunteer to a help request.
  */
-const createAssignment = async ({ requestId, volunteerId, assignedById }) => {
+const createAssignment = async ({ requestId, volunteerId, assignedById, skipSkillCheck }) => {
   const [helpRequest, volunteer] = await Promise.all([
     HelpRequest.findById(requestId),
     User.findOne({ _id: volunteerId, role: 'volunteer', isActive: true, isAvailable: true }),
@@ -28,6 +28,19 @@ const createAssignment = async ({ requestId, volunteerId, assignedById }) => {
     const err = new Error('Cannot assign to a resolved or cancelled request');
     err.statusCode = 400;
     throw err;
+  }
+
+  // Skill-gating soft block for critical/high priority tasks
+  if (!skipSkillCheck && ['critical', 'high'].includes(helpRequest.priority)) {
+    const requiredSkill = helpRequest.requestType;
+    const hasSkill = volunteer.skills && volunteer.skills.includes(requiredSkill);
+    if (!hasSkill) {
+      return {
+        warning: true,
+        message: `Volunteer "${volunteer.name}" does not have the "${requiredSkill}" skill required for this ${helpRequest.priority}-priority task. Their skills: ${volunteer.skills?.join(', ') || 'none'}. Proceed anyway?`,
+        requiresConfirmation: true,
+      };
+    }
   }
 
   // Check for existing active assignment
@@ -111,8 +124,9 @@ const updateAssignmentStatus = async (assignmentId, requestingUser, { status, re
 
   const isSelf = assignment.volunteer.toString() === requestingUser._id.toString();
   const isAdmin = requestingUser.role === 'admin';
+  const isCoordinator = requestingUser.role === 'coordinator';
 
-  if (!isSelf && !isAdmin) {
+  if (!isSelf && !isAdmin && !isCoordinator) {
     const err = new Error('Not authorised to update this assignment');
     err.statusCode = 403;
     throw err;
@@ -157,14 +171,23 @@ const updateAssignmentStatus = async (assignmentId, requestingUser, { status, re
 };
 
 /**
- * Delete / cancel an assignment (admin only).
+ * Delete / cancel an assignment.
+ * Admins can delete any assignment. Coordinators can only delete assignments they created.
  * Reverts the help request to pending and frees the volunteer.
  */
-const deleteAssignment = async (assignmentId) => {
+const deleteAssignment = async (assignmentId, requestingUser) => {
   const assignment = await Assignment.findById(assignmentId);
   if (!assignment) {
     const err = new Error('Assignment not found');
     err.statusCode = 404;
+    throw err;
+  }
+
+  // Coordinators can only cancel assignments they created
+  if (requestingUser.role === 'coordinator' &&
+      assignment.assignedBy.toString() !== requestingUser._id.toString()) {
+    const err = new Error('Coordinators can only cancel assignments they created');
+    err.statusCode = 403;
     throw err;
   }
 

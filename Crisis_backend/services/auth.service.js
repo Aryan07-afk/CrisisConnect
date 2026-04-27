@@ -49,6 +49,7 @@ const registerUser = async ({ name, email, password, role, phone, organization, 
       role: user.role,
       skills: user.skills,
       isAvailable: user.isAvailable,
+      isActive: user.isActive,
     },
   };
 };
@@ -84,6 +85,7 @@ const loginUser = async ({ email, password }) => {
       role: user.role,
       skills: user.skills,
       isAvailable: user.isAvailable,
+      isActive: user.isActive,
     },
   };
 };

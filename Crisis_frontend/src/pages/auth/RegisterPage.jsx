@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { coordinatorApplicationsAPI } from '../../api';
+import Logo from '../../components/common/Logo';
 
 const SKILLS = ['medical','rescue','logistics','communication','general'];
 const ACCEPTED_FILE_TYPES = '.pdf,.jpg,.jpeg,.png';
@@ -61,8 +62,9 @@ export default function RegisterPage() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', background: 'var(--bg)' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--brand)', marginBottom: '16px' }}>emergency</div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', marginBottom: '8px' }}>CrisisConnect</h1>
+          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+            <Logo size="large" link={false} />
+          </div>
           <p style={{ fontSize: '14px', color: 'var(--t3)' }}>Coordinator Application</p>
         </div>
 
@@ -90,8 +92,9 @@ export default function RegisterPage() {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', background: 'var(--bg)' }}>
       
       <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <div className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--brand)', marginBottom: '16px' }}>emergency</div>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', marginBottom: '8px' }}>Create an Account</h1>
+        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+          <Logo size="large" link={false} />
+        </div>
         <p style={{ fontSize: '14px', color: 'var(--t3)' }}>Join the platform to help coordinate relief operations</p>
       </div>
 
