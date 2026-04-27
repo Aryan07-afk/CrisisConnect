@@ -5,208 +5,106 @@ import PageHeader from '../../components/layout/PageHeader';
 import Badge, { PriorityDot } from '../../components/common/Badge';
 import Loader from '../../components/common/Loader';
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell
 } from 'recharts';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-const PIE_COLORS = ['#f97316','#f43f5e','#3b82f6','#10b981','#8b5cf6','#f59e0b'];
+const TYPE_COLORS = {
+  rescue: '#dc2626', medical: '#2563eb', food: '#16a34a',
+  shelter: '#d97706', water: '#0891b2', clothing: '#7c3aed', other: '#6b7280'
+};
 
 const CustomTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background:'var(--bg3)', border:'1px solid var(--border2)',
-      borderRadius:'var(--r)', padding:'8px 12px', fontSize:'.8rem'
+      background: '#fff', border: '1px solid #e3e8ef',
+      borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+      padding: '8px 12px', fontSize: '12px'
     }}>
-      <span style={{color:'var(--text)'}}>{payload[0].name}: </span>
-      <span style={{color:'var(--accent)', fontWeight:700}}>{payload[0].value}</span>
+      <span style={{ color: 'var(--t3)' }}>{payload[0].name}: </span>
+      <span style={{ color: 'var(--t1)', fontWeight: 600 }}>{payload[0].value}</span>
     </div>
   );
 };
 
-/* ── Heatmap Layer Component ─────────────────────────── */
-function HeatmapLayer({ points }) {
-  const map = useMap();
-  const heatLayerRef = useRef(null);
+const PRIORITY_COLORS = {
+  critical: '#dc2626',
+  high: '#f97316',
+  medium: '#d97706',
+  low: '#16a34a',
+};
 
-  useEffect(() => {
-    if (!points || points.length === 0) return;
+/* ── Map Markers Component ─────────────────────────── */
+function LocationMarkers({ points }) {
+  if (!points || points.length === 0) return null;
 
-    import('leaflet').then((LModule) => {
-      window.L = LModule.default || LModule;
-      import('leaflet.heat').then(() => {
-        // Remove previous layer if exists
-        if (heatLayerRef.current) {
-          map.removeLayer(heatLayerRef.current);
-        }
-
-        const heatData = points.map(p => [p.lat, p.lng, p.intensity]);
-
-        // Calculate max value dynamically based on density
-        // A single critical point is 1.0. To see red, we need a density of ~3.0.
-        // We'll set max to 3.0 so a single point looks blue/green, and clusters look red.
-        const dynamicMax = Math.max(1.0, points.length * 0.15);
-
-        heatLayerRef.current = window.L.heatLayer(heatData, {
-          radius: 30,
-          blur: 20,
-          maxZoom: 12,
-          max: dynamicMax > 5.0 ? 5.0 : 3.0, // cap max to show relative hot spots
-          gradient: {
-            0.0: '#080c12',
-            0.2: '#3b82f6',
-            0.4: '#10b981',
-            0.6: '#f59e0b',
-            0.8: '#f97316',
-            1.0: '#f43f5e',
-          },
-        }).addTo(map);
-      });
-    });
-
-    return () => {
-      if (heatLayerRef.current) {
-        map.removeLayer(heatLayerRef.current);
-      }
-    };
-  }, [points, map]);
-
-  return null;
+  return points.map((p, i) => (
+    <CircleMarker
+      key={i}
+      center={[p.lat, p.lng]}
+      radius={p.priority === 'critical' ? 12 : p.priority === 'high' ? 10 : 8}
+      pathOptions={{
+        fillColor: PRIORITY_COLORS[p.priority] || '#3b82f6',
+        color: '#ffffff',
+        weight: 1.5,
+        fillOpacity: 0.8
+      }}
+    >
+      <Popup>
+        <div style={{ padding: '2px', minWidth: '140px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '4px', textTransform: 'capitalize', color: 'var(--t1)' }}>
+            {p.type} Request
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--t3)', marginBottom: '8px' }}>
+            {p.area}
+          </div>
+          <div style={{ display: 'flex', gap: '6px', fontSize: '11px' }}>
+            <span style={{ 
+              background: (PRIORITY_COLORS[p.priority] || '#3b82f6') + '20', 
+              color: PRIORITY_COLORS[p.priority] || '#3b82f6',
+              padding: '2px 6px', 
+              borderRadius: '4px',
+              fontWeight: 600,
+              textTransform: 'uppercase'
+            }}>
+              {p.priority}
+            </span>
+            <span style={{ 
+              background: 'var(--neutral-bg)', 
+              color: 'var(--t2)',
+              border: '1px solid var(--border)',
+              padding: '2px 6px', 
+              borderRadius: '4px',
+              fontWeight: 600,
+              textTransform: 'capitalize'
+            }}>
+              {p.status}
+            </span>
+          </div>
+        </div>
+      </Popup>
+    </CircleMarker>
+  ));
 }
 
-/* ── Heatmap Card Component ──────────────────────────── */
-function DisasterHeatmap() {
-  const [heatData, setHeatData] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState('');
-
-  const loadHeatmap = () => {
-    dashboardAPI.getHeatmap()
-      .then(res => setHeatData(res.data.data || []))
-      .catch(() => setError('Failed to load heatmap data'))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    loadHeatmap();
-    // Poll every 15 seconds
-    const interval = setInterval(loadHeatmap, 15000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Summary stats from heatmap data
-  const totalPoints   = heatData.length;
-  const criticalCount = heatData.filter(p => p.priority === 'critical').length;
-  const highCount     = heatData.filter(p => p.priority === 'high').length;
-  const totalAffected = heatData.reduce((sum, p) => sum + (p.affected || 0), 0);
-
-  return (
-    <div className="card heatmap-card" style={{ marginBottom: 20 }}>
-      <div className="card-header">
-        <div>
-          <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: '1.1rem' }}>🗺️</span>
-            Disaster Heatmap
-          </div>
-          <div className="card-subtitle">
-            Real-time visualization of disaster locations and intensity
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          {totalPoints > 0 && (
-            <>
-              <div className="heatmap-stat">
-                <span className="heatmap-stat-value">{totalPoints}</span>
-                <span className="heatmap-stat-label">Locations</span>
-              </div>
-              <div className="heatmap-stat">
-                <span className="heatmap-stat-value" style={{ color: 'var(--red)' }}>{criticalCount}</span>
-                <span className="heatmap-stat-label">Critical</span>
-              </div>
-              <div className="heatmap-stat">
-                <span className="heatmap-stat-value" style={{ color: 'var(--yellow)' }}>{highCount}</span>
-                <span className="heatmap-stat-label">High</span>
-              </div>
-              <div className="heatmap-stat">
-                <span className="heatmap-stat-value" style={{ color: 'var(--accent)' }}>{totalAffected}</span>
-                <span className="heatmap-stat-label">Affected</span>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {loading ? (
-        <div style={{ height: 380, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Loader />
-        </div>
-      ) : error ? (
-        <div className="empty-state" style={{ padding: '40px 0' }}>
-          <p style={{ color: 'var(--red)' }}>{error}</p>
-        </div>
-      ) : (
-        <div className="heatmap-container">
-          <MapContainer
-            center={[22.5, 82.0]}
-            zoom={5}
-            minZoom={4}
-            maxBounds={[
-              [6.5, 68.0],
-              [37.5, 97.5]
-            ]}
-            maxBoundsViscosity={1.0}
-            scrollWheelZoom={true}
-            style={{ height: '100%', width: '100%', borderRadius: '0 0 8px 8px' }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            />
-            <HeatmapLayer points={heatData} />
-          </MapContainer>
-
-          {/* Legend */}
-          <div className="heatmap-legend">
-            <span className="heatmap-legend-title">Intensity</span>
-            <div className="heatmap-legend-bar" />
-            <div className="heatmap-legend-labels">
-              <span>Low</span>
-              <span>Medium</span>
-              <span>High</span>
-              <span>Critical</span>
-            </div>
-          </div>
-
-          {totalPoints === 0 && (
-            <div className="heatmap-empty-overlay">
-              <div style={{ fontSize: '2rem', marginBottom: 8 }}>📍</div>
-              <p>No disaster locations with coordinates yet</p>
-              <p style={{ fontSize: '.75rem', color: 'var(--text3)' }}>
-                Help requests with lat/lng coordinates will appear here
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
+/* ── Dashboard Components ────────────────────────────── */
 export default function DashboardPage() {
-  const { user, canManage, isVolunteer, refreshUser, logout } = useAuth();
+  const { user, isVolunteer, refreshUser, logout } = useAuth();
   const [stats, setStats]       = useState(null);
   const [activity, setActivity] = useState([]);
+  const [heatData, setHeatData] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [toggling, setToggling] = useState(false);
 
   const loadData = () => {
     if (isVolunteer) return;
-    Promise.all([dashboardAPI.getStats(), dashboardAPI.getActivity()])
-      .then(([s, a]) => {
+    Promise.all([dashboardAPI.getStats(), dashboardAPI.getActivity(), dashboardAPI.getHeatmap()])
+      .then(([s, a, h]) => {
         setStats(s.data.data);
         setActivity(a.data.data);
+        setHeatData(h.data.data || []);
       })
       .finally(() => setLoading(false));
   };
@@ -214,63 +112,27 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isVolunteer) { setLoading(false); return; }
     loadData();
-    // Poll every 15 seconds for updates (including escalated requests)
-    const interval = setInterval(loadData, 15000);
+    const interval = setInterval(loadData, 30000); // Polling every 30s
     return () => clearInterval(interval);
-  }, []);
+  }, [isVolunteer]);
 
   if (loading) return <><PageHeader title="Dashboard" /><Loader /></>;
 
   if (isVolunteer) {
+    // Volunteer view (Simplified for now as requested, just keeping basic functionality)
     return (
       <>
         <PageHeader title="Dashboard" subtitle={`Welcome back, ${user?.name}`} />
         <div className="page-body page-enter">
           <div className="card" style={{ maxWidth: 500 }}>
             <div style={{ textAlign: 'center', padding: '32px 20px' }}>
-              <div style={{ fontSize: '3rem', marginBottom: 12 }}>🚨</div>
-              <div style={{ fontFamily: 'var(--font-head)', fontSize: '1.2rem', fontWeight: 700, marginBottom: 8 }}>
+              <div className="material-symbols-outlined" style={{ fontSize: '3.5rem', marginBottom: 12, color: 'var(--danger)' }}>emergency</div>
+              <div style={{ fontSize: '16px', fontWeight: 700, marginBottom: 8, color: 'var(--t1)' }}>
                 Relief Operations Portal
               </div>
-              <p style={{ color: 'var(--text2)', fontSize: '.9rem', marginBottom: 20 }}>
+              <p style={{ color: 'var(--t3)', fontSize: '13px', marginBottom: 20 }}>
                 Use the sidebar to manage help requests and your assignments.
               </p>
-
-              <div style={{ marginBottom: 24, padding: '16px', background: 'var(--bg3)', borderRadius: 'var(--r)', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '.85rem', marginBottom: 8, color: 'var(--text2)' }}>Current Status</div>
-                <div style={{ fontWeight: 700, fontSize: '1.1rem', color: user?.isAvailable ? 'var(--green)' : 'var(--text3)', marginBottom: 12 }}>
-                  {user?.isAvailable ? '● Available for Assignments' : '● Currently Busy'}
-                </div>
-                <button 
-                  className={`btn ${user?.isAvailable ? 'btn-ghost' : 'btn-success'}`}
-                  onClick={async () => {
-                    setToggling(true);
-                    try {
-                      await volunteersAPI.toggleAvailability(user._id);
-                      if (refreshUser) await refreshUser();
-                    } catch (e) { alert(e.response?.data?.message || 'Failed to toggle API'); }
-                    setToggling(false);
-                  }}
-                  disabled={toggling}
-                  style={{ width: '100%', justifyContent: 'center' }}
-                >
-                  {toggling ? 'Updating…' : (user?.isAvailable ? 'Mark as Busy' : 'Mark as Available')}
-                </button>
-                <button 
-                  className="btn btn-ghost mt-2"
-                  style={{ width: '100%', justifyContent: 'center', color: 'var(--red)', border: '1px solid rgba(244,63,94,.2)' }}
-                  onClick={async () => {
-                    if (!window.confirm("Are you sure you want to go deeply Inactive? You will be logged out immediately, and an Admin will need to reactivate your account before you can log in again.")) return;
-                    try {
-                      await usersAPI.update(user._id, { isActive: false });
-                      logout();
-                    } catch (e) { alert(e.response?.data?.message || 'Failed to deactivate account'); }
-                  }}
-                >
-                  Deactivate Account (Long-term Inactive)
-                </button>
-              </div>
-
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
                 <a href="/app/requests" className="btn btn-primary">View Requests</a>
                 <a href="/app/assignments" className="btn btn-ghost">My Assignments</a>
@@ -282,170 +144,212 @@ export default function DashboardPage() {
     );
   }
 
-  const { requests, volunteers, assignments, requestsByType, requestsByPriority, urgentRequests } = stats || {};
+  const { requests, volunteers, requestsByType, requestsByPriority, urgentRequests } = stats || {};
 
   const typeData = (requestsByType || []).map(r => ({ name: r._id, value: r.count }));
-  const priorityData = (requestsByPriority || []).map(r => ({ name: r._id, value: r.count }));
+  
+  // Custom stacked bar logic for priorities
+  const pData = (requestsByPriority || []).reduce((acc, r) => { acc[r._id] = r.count; return acc; }, {});
+  const totalP = Object.values(pData).reduce((a, b) => a + b, 0) || 1;
+  const pPerc = (key) => ((pData[key] || 0) / totalP) * 100;
+
+  const totalPoints   = heatData.length;
+  const criticalCount = heatData.filter(p => p.priority === 'critical').length;
+  const highCount     = heatData.filter(p => p.priority === 'high').length;
 
   return (
     <>
-      <PageHeader
-        title="Command Dashboard"
-        subtitle="Live overview of all relief operations"
-        actions={
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '.72rem', color: 'var(--text3)' }}>
-            {new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
-          </span>
-        }
-      />
+      <div className="topbar">
+        <div className="topbar-left">
+          <h1>Command Dashboard</h1>
+          <p>Live overview of all relief operations</p>
+        </div>
+        <div className="topbar-right">
+          <div className="live-indicator">
+            <div className="live-dot" />
+            <span className="live-text">Live</span>
+          </div>
+          <button className="btn-primary" onClick={() => window.print()} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</span>
+            Download Report
+          </button>
+        </div>
+      </div>
+      
       <div className="page-body page-enter">
-
-        {/* Stat Cards */}
+        {/* ROW 1: 6 KPI CARDS */}
         <div className="stat-grid">
-          <div className="stat-card orange">
+          <div className="stat-card brand">
             <div className="stat-label">Total Requests</div>
             <div className="stat-value">{requests?.total ?? 0}</div>
-            <div className="stat-icon">📋</div>
-            <div className="stat-sub">All time</div>
+            <div className="stat-sublabel">All time</div>
+            <div className="stat-icon material-symbols-outlined">assignment</div>
           </div>
-          <div className="stat-card red">
+          <div className="stat-card warning">
             <div className="stat-label">Pending</div>
             <div className="stat-value">{requests?.pending ?? 0}</div>
-            <div className="stat-icon">⏳</div>
-            <div className="stat-sub">Needs attention</div>
+            <div className="stat-sublabel">Needs attention</div>
+            <div className="stat-icon material-symbols-outlined">hourglass_empty</div>
           </div>
-          <div className="stat-card yellow">
+          <div className="stat-card danger">
             <div className="stat-label">Critical</div>
             <div className="stat-value">{requests?.critical ?? 0}</div>
-            <div className="stat-icon">🔴</div>
-            <div className="stat-sub">Unresolved</div>
+            <div className="stat-sublabel">Unresolved SOS</div>
+            <div className="stat-icon material-symbols-outlined">warning</div>
           </div>
-          <div className="stat-card blue">
+          <div className="stat-card info">
             <div className="stat-label">In Progress</div>
             <div className="stat-value">{requests?.inProgress ?? 0}</div>
-            <div className="stat-icon">⚡</div>
-            <div className="stat-sub">Active now</div>
+            <div className="stat-sublabel">Active operations</div>
+            <div className="stat-icon material-symbols-outlined">bolt</div>
           </div>
-          <div className="stat-card green">
+          <div className="stat-card success">
             <div className="stat-label">Resolved</div>
             <div className="stat-value">{requests?.resolved ?? 0}</div>
-            <div className="stat-icon">✅</div>
-            <div className="stat-sub">Completed</div>
+            <div className="stat-sublabel">Successfully closed</div>
+            <div className="stat-icon material-symbols-outlined">check_circle</div>
           </div>
-          <div className="stat-card green">
+          <div className="stat-card neutral">
             <div className="stat-label">Available Vols.</div>
             <div className="stat-value">{volunteers?.available ?? 0}</div>
-            <div className="stat-icon">👥</div>
-            <div className="stat-sub">of {volunteers?.total ?? 0} total</div>
+            <div className="stat-sublabel">of {volunteers?.total ?? 0} total</div>
+            <div className="stat-icon material-symbols-outlined">groups</div>
           </div>
         </div>
 
-        {/* Disaster Heatmap */}
-        <DisasterHeatmap />
-
-        {/* Charts Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+        {/* ROW 2: SPLIT LAYOUT */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: '20px' }}>
+          
+          {/* LEFT: Heatmap & Charts */}
           <div className="card">
             <div className="card-header">
-              <div className="card-title">Requests by Type</div>
+              <div className="card-title">Disaster Heatmap</div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ background: 'var(--neutral-bg)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', padding: '3px 10px', fontSize: '11px', fontWeight: 600, color: 'var(--t3)', display: 'flex', gap: '4px' }}>
+                  Locations <span style={{color: 'var(--t1)'}}>{totalPoints}</span>
+                </div>
+                <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-br)', borderRadius: 'var(--r-sm)', padding: '3px 10px', fontSize: '11px', fontWeight: 600, color: 'var(--danger)', display: 'flex', gap: '4px' }}>
+                  Critical <span style={{color: 'var(--danger)'}}>{criticalCount}</span>
+                </div>
+                <div style={{ background: 'var(--neutral-bg)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', padding: '3px 10px', fontSize: '11px', fontWeight: 600, color: 'var(--t3)', display: 'flex', gap: '4px' }}>
+                  High <span style={{color: 'var(--t1)'}}>{highCount}</span>
+                </div>
+              </div>
             </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={typeData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                <XAxis dataKey="name" tick={{ fill: 'var(--text3)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'var(--text3)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,.04)' }} />
-                <Bar dataKey="value" fill="var(--accent)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+            
+            <div style={{ minHeight: '300px', borderBottom: '1px solid var(--border)' }}>
+              {heatData.length === 0 ? (
+                <div className="empty-state">
+                  <div className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--t4)' }}>map</div>
+                  <h3 style={{ fontSize: '15px', color: 'var(--t1)', marginTop: '16px' }}>No location data</h3>
+                  <p style={{ fontSize: '13px', color: 'var(--t3)' }}>Heatmap will appear when coordinates are logged.</p>
+                </div>
+              ) : (
+                <MapContainer
+                  center={[22.5, 82.0]} zoom={5} minZoom={4} scrollWheelZoom={true}
+                  style={{ height: '300px', width: '100%', borderRadius: 0, zIndex: 0 }}
+                >
+                  <TileLayer url="https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png" />
+                  <LocationMarkers points={heatData} />
+                </MapContainer>
+              )}
+            </div>
 
-          <div className="card">
-            <div className="card-header">
-              <div className="card-title">Priority Distribution</div>
-            </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie data={priorityData} dataKey="value" nameKey="name"
-                  cx="50%" cy="50%" innerRadius={55} outerRadius={80}
-                  paddingAngle={3}>
-                  {priorityData.map((_, i) => (
-                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', padding: '20px' }}>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '12px' }}>Requests by Type</div>
+                <ResponsiveContainer width="100%" height={120}>
+                  <BarChart data={typeData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="4 4" stroke="#f0f2f5" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--hover)' }} />
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={28}>
+                      {typeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={TYPE_COLORS[entry.name] || '#6b7280'} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '12px' }}>Priority Split</div>
+                
+                <div style={{ display: 'flex', width: '100%', height: '10px', borderRadius: '999px', overflow: 'hidden', marginBottom: '16px' }}>
+                  <div style={{ width: `${pPerc('critical')}%`, background: 'var(--danger)' }} />
+                  <div style={{ width: `${pPerc('high')}%`, background: '#f97316' }} />
+                  <div style={{ width: `${pPerc('medium')}%`, background: 'var(--warning)' }} />
+                  <div style={{ width: `${pPerc('low')}%`, background: 'var(--success)' }} />
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                  {['critical', 'high', 'medium', 'low'].map(p => (
+                    <div key={p} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: p === 'critical' ? 'var(--danger)' : p === 'high' ? '#f97316' : p === 'medium' ? 'var(--warning)' : 'var(--success)' }} />
+                      <span style={{ fontSize: '11px', color: 'var(--t3)', textTransform: 'capitalize' }}>{p}</span>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--t1)' }}>{Math.round(pPerc(p))}%</span>
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  iconType="circle" iconSize={8}
-                  formatter={(v) => <span style={{ color: 'var(--text2)', fontSize: '.78rem' }}>{v}</span>}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Two-column bottom */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-
-          {/* Urgent Requests */}
-          <div className="card">
-            <div className="card-header">
-              <div className="card-title">Urgent Requests</div>
-              <a href="/app/requests" className="btn btn-ghost btn-sm">View all</a>
+                </div>
+              </div>
             </div>
-            {(!urgentRequests || urgentRequests.length === 0) ? (
-              <div className="empty-state" style={{ padding: '24px 0' }}>
-                <p>No urgent pending requests 🎉</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {urgentRequests.map(r => (
-                  <div key={r._id} style={{
-                    background: r.escalated ? 'rgba(244, 63, 94, 0.1)' : 'var(--bg3)', 
-                    border: `1px solid ${r.escalated ? 'var(--red)' : 'var(--border)'}`,
-                    borderRadius: 'var(--r)', padding: '10px 14px'
-                  }}>
-                    <div className="flex-between mb-1" style={{ marginBottom: 4 }}>
-                      <strong style={{ fontSize: '.88rem', color: r.escalated ? 'var(--red)' : 'inherit' }}>
-                        <PriorityDot priority={r.priority} />{r.title}
-                      </strong>
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        {r.escalated && <span style={{ fontSize: '.7rem', color: '#fff', background: 'var(--red)', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>ESCALATED</span>}
-                        <Badge value={r.priority} />
-                      </div>
-                    </div>
-                    <div style={{ fontSize: '.75rem', color: 'var(--text3)' }}>
-                      📍 {r.location?.area || r.location?.address} &nbsp;·&nbsp;
-                      By {r.raisedBy?.name}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
-          {/* Recent Activity */}
-          <div className="card">
-            <div className="card-header">
-              <div className="card-title">Recent Activity</div>
-            </div>
-            {activity.length === 0 ? (
-              <div className="empty-state" style={{ padding: '24px 0' }}><p>No activity yet</p></div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {activity.slice(0, 6).map(r => (
-                  <div key={r._id} className="flex-between" style={{
-                    padding: '8px 0', borderBottom: '1px solid var(--border)',
-                  }}>
-                    <div>
-                      <div style={{ fontSize: '.85rem', fontWeight: 600 }}>{r.title}</div>
-                      <div style={{ fontSize: '.73rem', color: 'var(--text3)' }}>
-                        {r.requestType} · {r.raisedBy?.name}
-                      </div>
-                    </div>
-                    <Badge value={r.status} />
-                  </div>
-                ))}
+          {/* RIGHT: Stacked Cards */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            
+            <div className="card">
+              <div className="card-header">
+                <div className="card-title">Urgent Requests</div>
               </div>
-            )}
+              <div className="card-body" style={{ padding: '0' }}>
+                {(!urgentRequests || urgentRequests.length === 0) ? (
+                  <div style={{ padding: '20px', fontSize: '13px', color: 'var(--t4)', textAlign: 'center' }}>No urgent requests</div>
+                ) : (
+                  urgentRequests.map(r => (
+                    <div key={r._id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+                      <div className={`priority-dot ${r.priority}`} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--t1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.title}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--t4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.location?.area || 'Unknown'}</div>
+                      </div>
+                      <Badge value={r.status} />
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-header">
+                <div className="card-title">Recent Activity</div>
+              </div>
+              <div className="card-body" style={{ padding: '0' }}>
+                {activity.length === 0 ? (
+                  <div style={{ padding: '20px', fontSize: '13px', color: 'var(--t4)', textAlign: 'center' }}>No recent activity</div>
+                ) : (
+                  activity.slice(0, 5).map(r => (
+                    <div key={r._id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--t1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.title}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--t4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.raisedBy?.name}</div>
+                      </div>
+                      <Badge value={r.status} />
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="card" style={{ background: 'var(--success-bg)', borderColor: 'var(--success-br)' }}>
+              <div className="card-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 20px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Volunteers Available</div>
+                <div style={{ fontSize: '32px', fontWeight: 800, color: 'var(--success)', letterSpacing: '-0.04em', lineHeight: 1 }}>{volunteers?.available ?? 0}</div>
+                <div style={{ fontSize: '12px', color: 'var(--t3)', marginTop: '8px' }}>Out of {volunteers?.total ?? 0} total volunteers</div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

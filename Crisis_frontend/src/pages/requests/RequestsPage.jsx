@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { requestsAPI } from '../../api';
 import { useAuth } from '../../context/AuthContext';
-import PageHeader from '../../components/layout/PageHeader';
 import Badge, { PriorityDot } from '../../components/common/Badge';
 import Loader from '../../components/common/Loader';
 import Modal from '../../components/common/Modal';
@@ -13,7 +12,7 @@ const PRIORITIES= ['','critical','high','medium','low'];
 const TYPES     = ['','food','water','shelter','medical','rescue','clothing','other'];
 
 export default function RequestsPage() {
-  const { canManage, isVolunteer } = useAuth();
+  const { canManage } = useAuth();
   const [requests, setRequests]   = useState([]);
   const [loading, setLoading]     = useState(true);
   const [filters, setFilters]     = useState({ status:'', priority:'', requestType:'' });
@@ -31,7 +30,7 @@ export default function RequestsPage() {
       if (filters.priority)    params.priority    = filters.priority;
       if (filters.requestType) params.requestType = filters.requestType;
       const { data } = await requestsAPI.getAll(params);
-      setRequests(data.data.docs);
+      setRequests(data.data.docs || data.data);
     } catch (e) { setError('Failed to load requests'); }
     finally { setLoading(false); }
   }, [filters]);
@@ -39,7 +38,7 @@ export default function RequestsPage() {
   useEffect(() => { load(); }, [load]);
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this request?')) return;
+    if (!window.confirm('Delete this request?')) return;
     try { await requestsAPI.delete(id); load(); }
     catch (e) { alert(e.response?.data?.message || 'Delete failed'); }
   };
@@ -52,95 +51,101 @@ export default function RequestsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Help Requests"
-        subtitle="Manage all disaster relief requests"
-        actions={
+      <div className="topbar">
+        <div className="topbar-left">
+          <h1>Help Requests</h1>
+          <p>Manage all disaster relief requests</p>
+        </div>
+        <div className="topbar-right">
           <button className="btn btn-primary" onClick={() => { setEditItem(null); setShowForm(true); }}>
             + New Request
           </button>
-        }
-      />
+        </div>
+      </div>
+      
       <div className="page-body page-enter">
-        {error && <div className="alert alert-error">{error}</div>}
+        {error && <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger-br)', padding: '12px 16px', borderRadius: 'var(--r-md)' }}>{error}</div>}
 
-        {/* Filters */}
-        <div className="filters-bar">
-          <input
-            className="form-control search-input"
-            placeholder="🔍  Search by title or location…"
-            value={search} onChange={e => setSearch(e.target.value)}
-          />
-          <select className="form-control" value={filters.status}
-            onChange={e => setFilters(f=>({...f,status:e.target.value}))}>
-            {STATUSES.map(s => <option key={s} value={s}>{s||'All Status'}</option>)}
+        {/* Filter Strip */}
+        <div className="filter-strip">
+          <div style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
+            <span className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '16px', color: 'var(--t4)' }}>search</span>
+            <input
+              className="form-control"
+              style={{ paddingLeft: '36px' }}
+              placeholder="Search title or location…"
+              value={search} onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <select className="form-control" style={{ width: 'fit-content', minWidth: '140px' }} value={filters.status} onChange={e => setFilters(f=>({...f,status:e.target.value}))}>
+            <option value="">All Statuses</option>
+            {STATUSES.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <select className="form-control" value={filters.priority}
-            onChange={e => setFilters(f=>({...f,priority:e.target.value}))}>
-            {PRIORITIES.map(p => <option key={p} value={p}>{p||'All Priority'}</option>)}
+          <select className="form-control" style={{ width: 'fit-content', minWidth: '140px' }} value={filters.priority} onChange={e => setFilters(f=>({...f,priority:e.target.value}))}>
+            <option value="">All Priorities</option>
+            {PRIORITIES.filter(Boolean).map(p => <option key={p} value={p}>{p}</option>)}
           </select>
-          <select className="form-control" value={filters.requestType}
-            onChange={e => setFilters(f=>({...f,requestType:e.target.value}))}>
-            {TYPES.map(t => <option key={t} value={t}>{t||'All Types'}</option>)}
+          <select className="form-control" style={{ width: 'fit-content', minWidth: '140px' }} value={filters.requestType} onChange={e => setFilters(f=>({...f,requestType:e.target.value}))}>
+            <option value="">All Types</option>
+            {TYPES.filter(Boolean).map(t => <option key={t} value={t}>{t}</option>)}
           </select>
-          {(filters.status||filters.priority||filters.requestType||search) && (
-            <button className="btn btn-ghost btn-sm"
-              onClick={()=>{setFilters({status:'',priority:'',requestType:''});setSearch('');}}>
-              ✕ Clear
-            </button>
-          )}
+          <div className="results-count">Showing {filtered.length} of {requests.length}</div>
         </div>
 
-        {loading ? <Loader /> : (
-          filtered.length === 0 ? (
+        {/* Table Card */}
+        <div className="table-wrapper">
+          {loading ? (
+            <div style={{ padding: '60px 0' }}><Loader /></div>
+          ) : filtered.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">📭</div>
-              <p>No requests found</p>
+              <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--t4)', marginBottom: '16px' }}>inbox</span>
+              <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--t1)', marginBottom: '6px' }}>No requests found</div>
+              <div style={{ fontSize: '13px', color: 'var(--t3)' }}>Try adjusting your filters or search terms.</div>
             </div>
           ) : (
-            <div className="table-wrap">
-              <table>
-                <thead>
+            <div style={{ overflowX: 'auto', maxHeight: 'calc(100vh - 220px)' }}>
+              <table style={{ minWidth: '800px' }}>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                   <tr>
-                    <th>Title</th>
+                    <th>Title & Location</th>
                     <th>Type</th>
                     <th>Priority</th>
                     <th>Status</th>
-                    <th>Location</th>
                     <th>Affected</th>
-                    <th>Raised By</th>
                     <th>Date</th>
-                    <th>Actions</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map(r => (
                     <tr key={r._id}>
-                      <td>
-                        <strong>
-                          <PriorityDot priority={r.priority} />
-                          {r.title}
-                        </strong>
+                      <td style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div className={`priority-dot ${r.priority}`} />
+                        <div>
+                          <div className="td-primary">{r.title}</div>
+                          <div className="td-secondary">{r.location?.area || r.location?.address}</div>
+                        </div>
                       </td>
-                      <td><span style={{textTransform:'capitalize', color:'var(--text2)'}}>{r.requestType}</span></td>
+                      <td><span style={{ textTransform: 'capitalize', fontSize: '13px', color: 'var(--t2)' }}>{r.requestType}</span></td>
                       <td><Badge value={r.priority} /></td>
                       <td><Badge value={r.status} /></td>
-                      <td style={{maxWidth:140, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
-                        {r.location?.area || r.location?.address}
-                      </td>
-                      <td style={{fontFamily:'var(--font-mono)', color:'var(--text2)'}}>{r.affectedCount}</td>
-                      <td>{r.raisedBy?.name || '—'}</td>
-                      <td style={{fontFamily:'var(--font-mono)', fontSize:'.75rem', color:'var(--text3)'}}>
-                        {new Date(r.createdAt).toLocaleDateString('en-IN')}
-                      </td>
+                      <td><div className="td-primary">{r.affectedCount}</div></td>
                       <td>
-                        <div style={{display:'flex', gap:6}}>
-                          <button className="btn btn-ghost btn-xs"
-                            onClick={() => setViewItem(r)}>View</button>
-                          <button className="btn btn-ghost btn-xs"
-                            onClick={() => { setEditItem(r); setShowForm(true); }}>Edit</button>
-                          <button className="btn btn-danger btn-xs"
-                            onClick={() => handleDelete(r._id)}>Del</button>
+                        <div className="td-primary">{new Date(r.createdAt).toLocaleDateString('en-IN')}</div>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div className="table-actions" style={{ justifyContent: 'flex-end' }}>
+                          <button className="btn-icon" onClick={() => setViewItem(r)} title="View">
+                            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>visibility</span>
+                          </button>
+                          <button className="btn-icon" onClick={() => { setEditItem(r); setShowForm(true); }} title="Edit">
+                            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>edit</span>
+                          </button>
+                          {canManage && (
+                            <button className="btn-icon danger" onClick={() => handleDelete(r._id)} title="Delete">
+                              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -148,11 +153,10 @@ export default function RequestsPage() {
                 </tbody>
               </table>
             </div>
-          )
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Create / Edit Modal */}
       {showForm && (
         <Modal
           title={editItem ? 'Edit Request' : 'New Help Request'}
@@ -166,7 +170,6 @@ export default function RequestsPage() {
         </Modal>
       )}
 
-      {/* Detail Modal */}
       {viewItem && (
         <Modal title="Request Details" onClose={() => setViewItem(null)}>
           <RequestDetail

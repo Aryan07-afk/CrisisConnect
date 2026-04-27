@@ -15,8 +15,8 @@ router.post(
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('role')
       .optional()
-      .isIn(['volunteer'])
-      .withMessage('Role must be volunteer'),
+      .isIn(['volunteer', 'victim'])
+      .withMessage('Role must be volunteer or victim'),
   ],
   validate,
   register

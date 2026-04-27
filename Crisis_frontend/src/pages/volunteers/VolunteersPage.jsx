@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { volunteersAPI } from '../../api';
-import PageHeader from '../../components/layout/PageHeader';
-import Badge from '../../components/common/Badge';
 import Loader from '../../components/common/Loader';
 import Modal from '../../components/common/Modal';
 import VolunteerDetail from './VolunteerDetail';
@@ -46,110 +44,98 @@ export default function VolunteersPage() {
 
   return (
     <>
-      <PageHeader
-        title="Volunteers"
-        subtitle="Manage field volunteers and their availability"
-        actions={
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '.75rem', color: 'var(--text3)' }}>
-              {volunteers.filter(v => v.isAvailable).length} / {volunteers.length} available
-            </span>
-          </div>
-        }
-      />
+      <div className="topbar">
+        <div className="topbar-left">
+          <h1>Volunteers</h1>
+          <p>Manage field volunteers and their availability</p>
+        </div>
+        <div className="topbar-right">
+          <span style={{ fontSize: '12px', color: 'var(--t3)' }}>
+            <strong style={{ color: 'var(--t1)' }}>{volunteers.filter(v => v.isAvailable).length}</strong> available out of {volunteers.length}
+          </span>
+        </div>
+      </div>
+      
       <div className="page-body page-enter">
-        {error && <div className="alert alert-error">{error}</div>}
+        {error && <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger-br)', padding: '12px 16px', borderRadius: 'var(--r-md)' }}>{error}</div>}
 
-        <div className="filters-bar">
-          <input
-            className="form-control search-input"
-            placeholder="🔍  Search by name, email, org…"
-            value={search} onChange={e => setSearch(e.target.value)}
-          />
-          <select className="form-control" value={filters.isAvailable}
-            onChange={e => setFilters(f => ({ ...f, isAvailable: e.target.value }))}>
+        {/* Filter Strip */}
+        <div className="filter-strip">
+          <div style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
+            <span className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '16px', color: 'var(--t4)' }}>search</span>
+            <input
+              className="form-control"
+              style={{ paddingLeft: '36px' }}
+              placeholder="Search by name, email, org…"
+              value={search} onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <select className="form-control" style={{ width: 'fit-content', minWidth: '140px' }} value={filters.isAvailable} onChange={e => setFilters(f => ({ ...f, isAvailable: e.target.value }))}>
             <option value="">All Availability</option>
             <option value="true">Available</option>
             <option value="false">Busy</option>
           </select>
-          <select className="form-control" value={filters.skill}
-            onChange={e => setFilters(f => ({ ...f, skill: e.target.value }))}>
+          <select className="form-control" style={{ width: 'fit-content', minWidth: '140px' }} value={filters.skill} onChange={e => setFilters(f => ({ ...f, skill: e.target.value }))}>
             {SKILLS.map(s => <option key={s} value={s}>{s || 'All Skills'}</option>)}
           </select>
           {(filters.isAvailable || filters.skill || search) && (
-            <button className="btn btn-ghost btn-sm"
-              onClick={() => { setFilters({ isAvailable: '', skill: '' }); setSearch(''); }}>
+            <button className="btn btn-ghost btn-sm" onClick={() => { setFilters({ isAvailable: '', skill: '' }); setSearch(''); }}>
               ✕ Clear
             </button>
           )}
         </div>
 
-        {loading ? <Loader /> : filtered.length === 0 ? (
+        {loading ? <div style={{ padding: '60px 0' }}><Loader /></div> : filtered.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">👥</div>
-            <p>No volunteers found</p>
+            <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--t4)', marginBottom: '16px' }}>group_off</span>
+            <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--t1)', marginBottom: '6px' }}>No volunteers found</div>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
             {filtered.map(v => (
-              <div key={v._id} className="card" style={{ cursor: 'pointer', transition: 'border-color .2s, transform .2s' }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border2)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
-                  <div style={{
-                    width: 42, height: 42, borderRadius: '50%',
-                    background: v.isAvailable ? 'var(--green-bg)' : 'var(--yellow-bg)',
-                    border: `1px solid ${v.isAvailable ? 'rgba(16,185,129,.3)' : 'rgba(245,158,11,.3)'}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '.85rem',
-                    color: v.isAvailable ? 'var(--green)' : 'var(--yellow)', flexShrink: 0
-                  }}>
+              <div key={v._id} className="card" style={{ position: 'relative', padding: '18px', display: 'flex', flexDirection: 'column' }}>
+                {/* Top Accent Strip */}
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', borderRadius: 'var(--r-xl) var(--r-xl) 0 0', background: v.isAvailable ? 'var(--success)' : 'var(--warning)' }} />
+                
+                {/* Row 1: Avatar, Name, Dot */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'var(--neutral-bg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, color: 'var(--t2)', flexShrink: 0 }}>
                     {v.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: '.95rem', marginBottom: 2 }}>{v.name}</div>
-                    <div style={{ fontSize: '.75rem', color: 'var(--text3)' }}>{v.email}</div>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--t1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.name}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--t4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.email}</div>
                   </div>
-                  <div style={{
-                    width: 8, height: 8, borderRadius: '50%', marginTop: 6, flexShrink: 0,
-                    background: v.isAvailable ? 'var(--green)' : 'var(--yellow)',
-                    boxShadow: v.isAvailable ? '0 0 6px var(--green)' : 'none'
-                  }} />
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: v.isAvailable ? 'var(--success)' : 'var(--warning)', flexShrink: 0, marginTop: '4px' }} />
                 </div>
 
-                {v.organization && (
-                  <div style={{ fontSize: '.78rem', color: 'var(--text2)', marginBottom: 8 }}>
-                    🏢 {v.organization}
-                  </div>
-                )}
-                {v.location && (
-                  <div style={{ fontSize: '.78rem', color: 'var(--text2)', marginBottom: 8 }}>
-                    📍 {v.location}
-                  </div>
-                )}
+                {/* Row 2: Location */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--t3)', marginBottom: '12px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>pin_drop</span>
+                  {v.location || 'Location not set'}
+                </div>
 
-                {v.skills?.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 12 }}>
-                    {v.skills.map(s => (
-                      <span key={s} style={{
-                        padding: '2px 8px', borderRadius: 20,
-                        background: 'var(--bg4)', border: '1px solid var(--border2)',
-                        fontSize: '.68rem', color: 'var(--text2)',
-                        fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.05em'
-                      }}>{s}</span>
-                    ))}
-                  </div>
-                )}
+                {/* Row 3: Skills */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px', flex: 1 }}>
+                  {(v.skills && v.skills.length > 0) ? v.skills.map(s => (
+                    <span key={s} style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.04em', padding: '2px 8px', borderRadius: 'var(--r-xs)', background: 'var(--neutral-bg)', color: 'var(--t3)', border: '1px solid var(--border)', textTransform: 'uppercase' }}>
+                      {s}
+                    </span>
+                  )) : (
+                    <span style={{ fontSize: '10px', color: 'var(--t4)' }}>No specific skills listed</span>
+                  )}
+                </div>
 
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn btn-ghost btn-sm" style={{ flex: 1 }}
-                    onClick={() => setViewItem(v)}>
+                {/* Row 4: Actions */}
+                <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: 'auto' }}>
+                  <button className="btn-ghost" style={{ flex: 1, padding: '6px 0', fontSize: '12px', justifyContent: 'center' }} onClick={() => setViewItem(v)}>
                     View Profile
                   </button>
                   <button
-                    className={`btn btn-sm ${v.isAvailable ? 'btn-ghost' : 'btn-success'}`}
-                    onClick={() => toggleAvailability(v._id)}>
+                    className="btn"
+                    style={{ flex: 1, padding: '6px 0', fontSize: '12px', justifyContent: 'center', background: v.isAvailable ? 'var(--warning-bg)' : 'var(--success-bg)', color: v.isAvailable ? 'var(--warning)' : 'var(--success)', border: `1px solid ${v.isAvailable ? 'var(--warning-br)' : 'var(--success-br)'}` }}
+                    onClick={() => toggleAvailability(v._id)}
+                  >
                     {v.isAvailable ? 'Mark Busy' : 'Mark Free'}
                   </button>
                 </div>

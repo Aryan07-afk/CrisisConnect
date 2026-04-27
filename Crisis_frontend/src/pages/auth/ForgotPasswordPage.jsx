@@ -20,53 +20,44 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-grid-bg" />
-      <div className="auth-glow" />
-      <div className="auth-card">
-        <div className="auth-logo">
-          <div className="auth-logo-icon">🚨</div>
-          <div>
-            <div className="auth-logo-text">CrisisConnect</div>
-            <div className="auth-logo-sub">Relief Ops Platform</div>
-          </div>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', background: 'var(--bg)' }}>
+      
+      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--brand)', marginBottom: '16px' }}>lock_reset</div>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', marginBottom: '8px' }}>Forgot Password</h1>
+        <p style={{ fontSize: '14px', color: 'var(--t3)' }}>Enter your email and we'll send a reset link</p>
+      </div>
 
-        <h2 className="auth-title">Forgot Password</h2>
-        <p className="auth-sub">Enter your email and we'll send you a link to reset your password</p>
-
-        {error && <div className="alert alert-error">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+      <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '32px' }}>
+        {error && <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger-br)', padding: '10px 14px', borderRadius: 'var(--r-md)', marginBottom: '20px', fontSize: '13px' }}>{error}</div>}
+        {success && <div style={{ background: 'var(--success-bg)', color: 'var(--success)', border: '1px solid var(--success-br)', padding: '10px 14px', borderRadius: 'var(--r-md)', marginBottom: '20px', fontSize: '13px' }}>{success}</div>}
 
         {!success ? (
           <form onSubmit={submit}>
-            <div className="form-group">
-              <label className="form-label">Email address</label>
-              <input className="form-control" type="email" name="email"
-                placeholder="you@org.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <div className="form-group" style={{ marginBottom: '24px' }}>
+              <label className="form-label" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--t2)', marginBottom: '8px' }}>Email address</label>
+              <input className="form-control" type="email" name="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ height: '40px' }} />
             </div>
-            <button type="submit" className="btn btn-primary full-width mt-2" disabled={loading}>
-              {loading ? 'Sending…' : 'Send Reset Link →'}
+            <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%', height: '44px', justifyContent: 'center', fontSize: '14px', fontWeight: 600 }}>
+              {loading ? 'Sending…' : 'Send Reset Link'}
             </button>
           </form>
         ) : (
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ fontSize: '3rem', marginBottom: 16 }}>📧</div>
-            <p style={{ color: 'var(--text2)', fontSize: '.9rem', marginBottom: 20 }}>
+          <div style={{ textAlign: 'center', padding: '16px 0' }}>
+            <div className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--brand)', marginBottom: '16px' }}>forward_to_inbox</div>
+            <p style={{ color: 'var(--t2)', fontSize: '14px', marginBottom: '20px', lineHeight: 1.5 }}>
               Check your email for the password reset link. The link will expire in 15 minutes.
             </p>
-            <button className="btn btn-ghost full-width" onClick={() => { setSuccess(''); setEmail(''); }}>
+            <button className="btn-ghost" onClick={() => { setSuccess(''); setEmail(''); }} style={{ width: '100%', height: '40px', justifyContent: 'center' }}>
               Send again
             </button>
           </div>
         )}
-
-        <p className="auth-link">
-          Remember your password? <Link to="/login">Sign in</Link>
-        </p>
-
-        <div className="divider" />
       </div>
+
+      <p style={{ marginTop: '32px', fontSize: '13px', color: 'var(--t3)' }}>
+        Remember your password? <Link to="/login" style={{ color: 'var(--brand)', fontWeight: 600, textDecoration: 'none' }}>Sign in</Link>
+      </p>
     </div>
   );
 }

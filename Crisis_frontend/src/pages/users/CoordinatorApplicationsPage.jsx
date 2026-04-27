@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { coordinatorApplicationsAPI } from '../../api';
-import PageHeader from '../../components/layout/PageHeader';
 import Loader from '../../components/common/Loader';
+import Modal from '../../components/common/Modal';
 
 const STATUS_COLORS = {
-  pending:  { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b' },
-  approved: { bg: 'rgba(34,197,94,0.12)',  color: '#22c55e' },
-  rejected: { bg: 'rgba(239,68,68,0.12)',  color: '#ef4444' },
+  pending:  { bg: 'var(--warning-bg)', color: 'var(--warning)', br: 'var(--warning-br)' },
+  approved: { bg: 'var(--success-bg)', color: 'var(--success)', br: 'var(--success-br)' },
+  rejected: { bg: 'var(--danger-bg)',  color: 'var(--danger)',  br: 'var(--danger-br)' },
 };
 
 const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
@@ -17,7 +17,7 @@ export default function CoordinatorApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState('pending');
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState(null);
-  const [rejectModal, setRejectModal] = useState(null); // applicationId or null
+  const [rejectModal, setRejectModal] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
   const load = useCallback(async () => {
@@ -27,11 +27,8 @@ export default function CoordinatorApplicationsPage() {
       if (statusFilter) params.status = statusFilter;
       const { data } = await coordinatorApplicationsAPI.getAll(params);
       setApplications(data.data.docs || data.data || []);
-    } catch {
-      setError('Failed to load applications');
-    } finally {
-      setLoading(false);
-    }
+    } catch { setError('Failed to load applications'); } 
+    finally { setLoading(false); }
   }, [statusFilter]);
 
   useEffect(() => { load(); }, [load]);
@@ -42,14 +39,12 @@ export default function CoordinatorApplicationsPage() {
     try {
       await coordinatorApplicationsAPI.review(id, { action: 'approve' });
       load();
-    } catch (e) {
-      alert(e.response?.data?.message || 'Failed to approve application');
-    } finally {
-      setActionLoading(null);
-    }
+    } catch (e) { alert(e.response?.data?.message || 'Failed to approve'); } 
+    finally { setActionLoading(null); }
   };
 
-  const handleReject = async () => {
+  const handleReject = async (e) => {
+    if (e) e.preventDefault();
     if (!rejectModal) return;
     setActionLoading(rejectModal);
     try {
@@ -60,18 +55,13 @@ export default function CoordinatorApplicationsPage() {
       setRejectModal(null);
       setRejectionReason('');
       load();
-    } catch (e) {
-      alert(e.response?.data?.message || 'Failed to reject application');
-    } finally {
-      setActionLoading(null);
-    }
+    } catch (e) { alert(e.response?.data?.message || 'Failed to reject'); } 
+    finally { setActionLoading(null); }
   };
 
   const getDocumentUrl = (docPath) => {
     if (!docPath) return '#';
-    // Normalize the path to use the correct URL format
     const normalizedPath = docPath.replace(/\\/g, '/');
-    // Extract just the relative path from 'uploads/' onwards
     const uploadsIndex = normalizedPath.indexOf('uploads/');
     const relativePath = uploadsIndex >= 0 ? normalizedPath.substring(uploadsIndex) : normalizedPath;
     return `${BACKEND_URL}/${relativePath}`;
@@ -79,41 +69,47 @@ export default function CoordinatorApplicationsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Coordinator Applications"
-        subtitle="Review and manage coordinator registration applications"
-      />
+      <div className="topbar">
+        <div className="topbar-left">
+          <h1>Coordinator Applications</h1>
+          <p>Review and manage coordinator registration applications</p>
+        </div>
+      </div>
+      
       <div className="page-body page-enter">
-        {error && <div className="alert alert-error">{error}</div>}
+        {error && <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger-br)', padding: '12px 16px', borderRadius: 'var(--r-md)', marginBottom: '16px' }}>{error}</div>}
 
-        {/* Status filter tabs */}
-        <div className="filters-bar">
-          {['pending', 'approved', 'rejected', ''].map(status => (
-            <button
-              key={status}
-              className={`btn btn-sm ${statusFilter === status ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setStatusFilter(status)}
-              style={{ textTransform: 'capitalize' }}
+        <div className="filter-strip">
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <select 
+              className="form-control" 
+              style={{ width: '160px', height: '36px' }} 
+              value={statusFilter} 
+              onChange={e => setStatusFilter(e.target.value)}
             >
-              {status || 'All'}
-            </button>
-          ))}
+              <option value="">All Applications</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
         </div>
 
-        {loading ? <Loader /> : applications.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">📄</div>
-            <p>No {statusFilter || ''} applications found</p>
-          </div>
-        ) : (
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            <div className="table-responsive">
-              <table className="table" style={{ margin: 0 }}>
+        <div className="table-wrapper">
+          {loading ? (
+            <div style={{ padding: '60px 0' }}><Loader /></div>
+          ) : applications.length === 0 ? (
+            <div className="empty-state">
+              <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--t4)', marginBottom: '16px' }}>description</span>
+              <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--t1)', marginBottom: '6px' }}>No {statusFilter || ''} applications found</div>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ minWidth: '800px' }}>
                 <thead>
                   <tr>
                     <th>Applicant</th>
-                    <th>Organization</th>
-                    <th>Location</th>
+                    <th>Organization & Location</th>
                     <th>Document</th>
                     <th>Status</th>
                     <th>Submitted</th>
@@ -121,142 +117,93 @@ export default function CoordinatorApplicationsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {applications.map(app => (
-                    <tr key={app._id}>
-                      <td>
-                        <div style={{ fontWeight: 600 }}>{app.name}</div>
-                        <div style={{ fontSize: '.8rem', color: 'var(--text3)' }}>{app.email}</div>
-                        {app.phone && (
-                          <div style={{ fontSize: '.75rem', color: 'var(--text3)' }}>📞 {app.phone}</div>
-                        )}
-                      </td>
-                      <td style={{ fontSize: '.85rem', color: 'var(--text2)' }}>
-                        {app.organization || '—'}
-                      </td>
-                      <td style={{ fontSize: '.85rem', color: 'var(--text2)' }}>
-                        {app.location || '—'}
-                      </td>
-                      <td>
-                        {app.documentProof ? (
-                          <a
-                            href={getDocumentUrl(app.documentProof)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-ghost"
-                            style={{ fontSize: '.78rem' }}
-                          >
-                            📎 View Doc
-                          </a>
-                        ) : (
-                          <span style={{ color: 'var(--text3)', fontSize: '.8rem' }}>No file</span>
-                        )}
-                      </td>
-                      <td>
-                        <div style={{
-                          display: 'inline-block',
-                          padding: '4px 10px', borderRadius: 20, fontSize: '.75rem', fontWeight: 600,
-                          background: STATUS_COLORS[app.status]?.bg || 'var(--card2)',
-                          color: STATUS_COLORS[app.status]?.color || 'var(--text2)',
-                          textTransform: 'capitalize',
-                        }}>
-                          {app.status}
-                        </div>
-                        {app.status === 'rejected' && app.rejectionReason && (
-                          <div style={{ fontSize: '.72rem', color: 'var(--text3)', marginTop: 4, maxWidth: 160 }}>
-                            {app.rejectionReason}
+                  {applications.map(app => {
+                    const c = STATUS_COLORS[app.status] || { bg: 'var(--neutral-bg)', color: 'var(--t3)', br: 'var(--border)' };
+                    return (
+                      <tr key={app._id}>
+                        <td>
+                          <div className="td-primary">{app.name}</div>
+                          <div className="td-secondary">{app.email}</div>
+                          {app.phone && <div className="td-secondary">📞 {app.phone}</div>}
+                        </td>
+                        <td>
+                          <div className="td-primary">{app.organization || '—'}</div>
+                          <div className="td-secondary">{app.location || '—'}</div>
+                        </td>
+                        <td>
+                          {app.documentProof ? (
+                            <a href={getDocumentUrl(app.documentProof)} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 600, color: 'var(--brand)', textDecoration: 'none' }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>attach_file</span>
+                              View Doc
+                            </a>
+                          ) : (
+                            <span style={{ fontSize: '12px', color: 'var(--t4)' }}>No file</span>
+                          )}
+                        </td>
+                        <td>
+                          <div style={{ display: 'inline-flex', padding: '2px 8px', borderRadius: 'var(--r-xs)', fontSize: '11px', fontWeight: 600, background: c.bg, color: c.color, border: `1px solid ${c.br}`, textTransform: 'capitalize' }}>
+                            {app.status}
                           </div>
-                        )}
-                      </td>
-                      <td style={{ fontSize: '.85rem', color: 'var(--text2)' }}>
-                        {new Date(app.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        {app.status === 'pending' ? (
-                          <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                            <button
-                              className="btn btn-sm btn-success"
-                              onClick={() => handleApprove(app._id)}
-                              disabled={actionLoading === app._id}
-                              style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: 'none', fontWeight: 600 }}
-                            >
-                              {actionLoading === app._id ? '…' : '✓ Approve'}
-                            </button>
-                            <button
-                              className="btn btn-sm"
-                              onClick={() => { setRejectModal(app._id); setRejectionReason(''); }}
-                              disabled={actionLoading === app._id}
-                              style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: 'none', fontWeight: 600 }}
-                            >
-                              ✕ Reject
-                            </button>
-                          </div>
-                        ) : (
-                          <span style={{ fontSize: '.8rem', color: 'var(--text3)' }}>
-                            {app.status === 'approved' ? 'Account created' : 'Rejected'}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                          {app.status === 'rejected' && app.rejectionReason && (
+                            <div style={{ fontSize: '11px', color: 'var(--t4)', marginTop: '4px', maxWidth: '160px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {app.rejectionReason}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          <div className="td-primary">{new Date(app.createdAt).toLocaleDateString('en-IN')}</div>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          {app.status === 'pending' ? (
+                            <div className="table-actions" style={{ justifyContent: 'flex-end' }}>
+                              <button className="btn-success" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => handleApprove(app._id)} disabled={actionLoading === app._id}>
+                                {actionLoading === app._id ? '...' : 'Approve'}
+                              </button>
+                              <button className="btn-danger" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => { setRejectModal(app._id); setRejectionReason(''); }} disabled={actionLoading === app._id}>
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '12px', color: 'var(--t4)' }}>
+                              {app.status === 'approved' ? 'Account created' : 'Rejected'}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Rejection reason modal */}
       {rejectModal && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, backdropFilter: 'blur(4px)',
-        }}
-          onClick={() => setRejectModal(null)}
-        >
-          <div
-            style={{
-              background: 'var(--bg2, #0e1420)',
-              border: '1px solid var(--border, #1e2d47)',
-              borderRadius: 14, padding: '28px 32px',
-              width: '100%', maxWidth: 440,
-              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ margin: '0 0 8px', color: 'var(--text1, #dce6f5)', fontSize: '1.1rem' }}>
-              Reject Application
-            </h3>
-            <p style={{ color: 'var(--text2, #7a8fb5)', fontSize: '.85rem', marginBottom: 16 }}>
+        <Modal title="Reject Application" onClose={() => setRejectModal(null)}>
+          <form onSubmit={handleReject}>
+            <p style={{ fontSize: '13px', color: 'var(--t3)', marginBottom: '16px' }}>
               Please provide a reason for rejecting this coordinator application. The applicant will be notified via email.
             </p>
-            <textarea
-              className="form-control"
-              rows={3}
-              placeholder="e.g., Document provided is not a valid government ID..."
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              style={{ resize: 'vertical', marginBottom: 16 }}
-              autoFocus
-            />
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => setRejectModal(null)}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn btn-sm"
-                onClick={handleReject}
-                disabled={actionLoading === rejectModal}
-                style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: 'none', fontWeight: 600 }}
-              >
-                {actionLoading === rejectModal ? 'Rejecting…' : 'Reject Application'}
+            <div className="form-group" style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--t2)', marginBottom: '6px' }}>Rejection Reason</label>
+              <textarea
+                className="form-control"
+                rows={3}
+                placeholder="e.g., Document provided is not a valid government ID..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn-ghost" onClick={() => setRejectModal(null)}>Cancel</button>
+              <button type="submit" className="btn-danger" disabled={actionLoading === rejectModal}>
+                {actionLoading === rejectModal ? 'Rejecting...' : 'Reject Application'}
               </button>
             </div>
-          </div>
-        </div>
+          </form>
+        </Modal>
       )}
     </>
   );

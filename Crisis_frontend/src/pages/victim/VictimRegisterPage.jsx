@@ -25,103 +25,80 @@ export default function VictimRegisterPage() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-grid-bg" />
-      <div style={{
-        position: 'absolute', top: '20%', left: '50%',
-        transform: 'translate(-50%,-50%)',
-        width: 500, height: 300,
-        background: 'radial-gradient(ellipse, rgba(244,63,94,.1) 0%, transparent 70%)',
-        pointerEvents: 'none'
-      }} />
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', background: 'var(--bg)' }}>
+      
+      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--danger)', marginBottom: '16px' }}>emergency</div>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', marginBottom: '8px' }}>Victim Portal</h1>
+        <p style={{ fontSize: '14px', color: 'var(--t3)' }}>Register to request help and track updates</p>
+      </div>
 
-      <div className="auth-card" style={{ maxWidth: 480 }}>
-        <div style={{
-          background: 'var(--red-bg)', border: '1px solid rgba(244,63,94,.25)',
-          borderRadius: 'var(--r)', padding: '10px 14px', marginBottom: 24,
-          display: 'flex', alignItems: 'center', gap: 10
-        }}>
-          <span style={{ fontSize: '1.3rem' }}>🆘</span>
+      <div className="card" style={{ width: '100%', maxWidth: '480px', padding: '32px' }}>
+        <div style={{ background: 'var(--danger-bg)', border: '1px solid var(--danger-br)', borderRadius: 'var(--r-md)', padding: '12px 16px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span className="material-symbols-outlined" style={{ color: 'var(--danger)' }}>sos</span>
           <div>
-            <div style={{ fontWeight: 700, fontSize: '.88rem', color: 'var(--red)' }}>Victim Emergency Portal</div>
-            <div style={{ fontSize: '.72rem', color: 'var(--text3)' }}>Register to request help</div>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--danger)' }}>Emergency Portal</div>
+            <div style={{ fontSize: '12px', color: 'var(--t2)' }}>Create an account to submit SOS requests</div>
           </div>
         </div>
 
-        <div className="auth-logo">
-          <div className="auth-logo-icon" style={{ background: 'var(--red)' }}>🚨</div>
-          <div>
-            <div className="auth-logo-text">CrisisConnect</div>
-            <div className="auth-logo-sub">Victim Portal</div>
-          </div>
-        </div>
-
-        <h2 className="auth-title">Register for Help</h2>
-        <p className="auth-sub">Create an account to submit and track your help requests</p>
-
-        {error && <div className="alert alert-error">{error}</div>}
+        {error && <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger-br)', padding: '10px 14px', borderRadius: 'var(--r-md)', marginBottom: '20px', fontSize: '13px' }}>{error}</div>}
 
         <form onSubmit={submit}>
-          <div className="form-row">
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <div className="form-group">
-              <label className="form-label">Full Name *</label>
-              <input className="form-control" name="name" placeholder="Your full name"
-                value={form.name} onChange={handle} required />
+              <label className="form-label" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--t2)', marginBottom: '8px' }}>Full Name *</label>
+              <input className="form-control" name="name" placeholder="John Doe" value={form.name} onChange={handle} required style={{ height: '40px' }} />
             </div>
             <div className="form-group">
-              <label className="form-label">Phone</label>
-              <input className="form-control" name="phone" placeholder="9XXXXXXXXX"
-                value={form.phone} onChange={handle} />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Email *</label>
-            <input className="form-control" type="email" name="email"
-              placeholder="your@email.com" value={form.email} onChange={handle} required />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Password *</label>
-            <input className="form-control" type="password" name="password"
-              placeholder="Min 6 characters" value={form.password} onChange={handle} required />
-          </div>
-
-          <div className="divider" />
-          <div style={{ fontSize: '.72rem', color: 'var(--text3)', marginBottom: 10, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
-            Your Location
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Address</label>
-            <input className="form-control" name="address" placeholder="Street / Village / Area"
-              value={form.address} onChange={handle} />
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">District</label>
-              <input className="form-control" name="district" placeholder="District"
-                value={form.district} onChange={handle} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">State</label>
-              <input className="form-control" name="state" placeholder="State"
-                value={form.state} onChange={handle} />
+              <label className="form-label" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--t2)', marginBottom: '8px' }}>Phone</label>
+              <input className="form-control" name="phone" placeholder="9XXXXXXXXX" value={form.phone} onChange={handle} style={{ height: '40px' }} />
             </div>
           </div>
 
-          <button type="submit" className="btn full-width mt-2" disabled={loading}
-            style={{ background: 'var(--red)', color: '#fff', justifyContent: 'center' }}>
-            {loading ? 'Creating account…' : 'Register & Request Help →'}
+          <div className="form-group" style={{ marginBottom: '16px' }}>
+            <label className="form-label" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--t2)', marginBottom: '8px' }}>Email address *</label>
+            <input className="form-control" type="email" name="email" placeholder="you@example.com" value={form.email} onChange={handle} required style={{ height: '40px' }} />
+          </div>
+          
+          <div className="form-group" style={{ marginBottom: '24px' }}>
+            <label className="form-label" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--t2)', marginBottom: '8px' }}>Password *</label>
+            <input className="form-control" type="password" name="password" placeholder="Min 6 characters" value={form.password} onChange={handle} required style={{ height: '40px' }} />
+          </div>
+
+          <div style={{ height: '1px', background: 'var(--border)', margin: '0 -32px 24px -32px' }} />
+          
+          <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--t4)', marginBottom: '16px', fontWeight: 600 }}>Your Location</div>
+
+          <div className="form-group" style={{ marginBottom: '16px' }}>
+            <label className="form-label" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--t2)', marginBottom: '8px' }}>Address</label>
+            <input className="form-control" name="address" placeholder="Street / Village / Area" value={form.address} onChange={handle} style={{ height: '40px' }} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--t2)', marginBottom: '8px' }}>District</label>
+              <input className="form-control" name="district" placeholder="District" value={form.district} onChange={handle} style={{ height: '40px' }} />
+            </div>
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--t2)', marginBottom: '8px' }}>State</label>
+              <input className="form-control" name="state" placeholder="State" value={form.state} onChange={handle} style={{ height: '40px' }} />
+            </div>
+          </div>
+
+          <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%', height: '44px', justifyContent: 'center', fontSize: '14px', fontWeight: 600, background: 'var(--danger)', borderColor: 'var(--danger)' }}>
+            {loading ? 'Creating account…' : 'Register & Request Help'}
           </button>
         </form>
+      </div>
 
-        <p className="auth-link">
-          Already registered? <Link to="/victim/login">Sign in here</Link>
+      <div style={{ marginTop: '32px', textAlign: 'center' }}>
+        <p style={{ fontSize: '13px', color: 'var(--t3)', marginBottom: '8px' }}>
+          Already registered? <Link to="/victim/login" style={{ color: 'var(--danger)', fontWeight: 600, textDecoration: 'none' }}>Sign in here</Link>
         </p>
-        <p className="auth-link" style={{ marginTop: 6 }}>
-          Are you a volunteer? <Link to="/login">Volunteer login →</Link>
+        <p style={{ fontSize: '13px', color: 'var(--t3)' }}>
+          Are you a volunteer? <Link to="/login" style={{ color: 'var(--brand)', fontWeight: 600, textDecoration: 'none' }}>Volunteer login →</Link>
         </p>
       </div>
     </div>

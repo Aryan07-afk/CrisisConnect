@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { usersAPI, authAPI } from '../../api';
-import PageHeader from '../../components/layout/PageHeader';
-import Badge from '../../components/common/Badge';
 
 const SKILLS = ['medical','rescue','logistics','communication','general'];
 
@@ -46,86 +44,128 @@ export default function ProfilePage() {
 
   return (
     <>
-      <PageHeader title="My Profile" subtitle="Manage your account settings" />
+      <div className="topbar">
+        <div className="topbar-left">
+          <h1>My Profile</h1>
+          <p>Manage your account settings</p>
+        </div>
+      </div>
+      
       <div className="page-body page-enter">
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
 
           <div className="card">
             <div className="card-header">
-              <div>
-                <div className="card-title">Profile Information</div>
-                <div className="card-subtitle">Update your details</div>
-              </div>
+              <div className="card-title">Profile Information</div>
+              <div style={{ fontSize: '12px', color: 'var(--t4)', marginTop: '2px' }}>Update your details</div>
             </div>
-            {msg && <div className="alert alert-success">{msg}</div>}
-            {err && <div className="alert alert-error">{err}</div>}
-            <form onSubmit={saveProfile}>
-              <div className="form-group">
-                <label className="form-label">Full Name</label>
-                <input className="form-control" name="name" value={form.name} onChange={handle} required />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Phone</label>
-                  <input className="form-control" name="phone" value={form.phone} onChange={handle} />
+            <div className="card-body">
+              {msg && <div style={{ background: 'var(--success-bg)', color: 'var(--success)', border: '1px solid var(--success-br)', padding: '10px 14px', borderRadius: 'var(--r-md)', marginBottom: '16px', fontSize: '13px' }}>{msg}</div>}
+              {err && <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger-br)', padding: '10px 14px', borderRadius: 'var(--r-md)', marginBottom: '16px', fontSize: '13px' }}>{err}</div>}
+              
+              <form onSubmit={saveProfile}>
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="form-label" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--t2)', marginBottom: '6px' }}>Full Name</label>
+                  <input className="form-control" name="name" value={form.name} onChange={handle} required />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Location</label>
-                  <input className="form-control" name="location" value={form.location} onChange={handle} />
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Organization</label>
-                <input className="form-control" name="organization" value={form.organization} onChange={handle} />
-              </div>
-              {user?.role === 'volunteer' && (
-                <div className="form-group">
-                  <label className="form-label">Skills</label>
-                  <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginTop:4 }}>
-                    {SKILLS.map(s => (
-                      <button key={s} type="button" onClick={()=>toggleSkill(s)}
-                        className={`btn btn-sm ${form.skills.includes(s)?'btn-primary':'btn-ghost'}`}>{s}</button>
-                    ))}
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--t2)', marginBottom: '6px' }}>Phone</label>
+                    <input className="form-control" name="phone" value={form.phone} onChange={handle} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--t2)', marginBottom: '6px' }}>Location</label>
+                    <input className="form-control" name="location" value={form.location} onChange={handle} />
                   </div>
                 </div>
-              )}
-              <button type="submit" className="btn btn-primary" disabled={saving}>{saving?'Saving…':'Save changes'}</button>
-            </form>
+                
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label className="form-label" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--t2)', marginBottom: '6px' }}>Organization</label>
+                  <input className="form-control" name="organization" value={form.organization} onChange={handle} />
+                </div>
+                
+                {user?.role === 'volunteer' && (
+                  <div className="form-group" style={{ marginBottom: '24px' }}>
+                    <label className="form-label" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--t2)', marginBottom: '6px' }}>Skills</label>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
+                      {SKILLS.map(s => (
+                        <button key={s} type="button" onClick={() => toggleSkill(s)}
+                          className={form.skills.includes(s) ? 'btn-primary' : 'btn-ghost'}
+                          style={{ padding: '4px 12px', fontSize: '12px', borderRadius: 'var(--r-xl)', textTransform: 'capitalize' }}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <button type="submit" className="btn-primary" disabled={saving} style={{ marginTop: '8px' }}>
+                  {saving ? 'Saving…' : 'Save changes'}
+                </button>
+              </form>
+            </div>
           </div>
 
-          <div>
-            <div className="card mb-2" style={{ marginBottom:16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="card">
               <div className="card-header">
                 <div className="card-title">Account Info</div>
               </div>
-              <div className="detail-grid">
-                <div className="detail-item"><div className="detail-lbl">Email</div><div className="detail-val">{user?.email}</div></div>
-                <div className="detail-item"><div className="detail-lbl">Role</div><div className="detail-val"><Badge value={user?.role} /></div></div>
-                <div className="detail-item"><div className="detail-lbl">Status</div><div className="detail-val" style={{color: user?.isActive?'var(--green)':'var(--red)'}}>
-                  {user?.isActive ? '● Active' : '● Inactive'}</div></div>
-                {user?.role==='volunteer' && (
-                  <div className="detail-item"><div className="detail-lbl">Availability</div>
-                    <div className="detail-val" style={{color: user?.isAvailable?'var(--green)':'var(--yellow)'}}>
-                      {user?.isAvailable ? '● Available' : '● Busy'}</div></div>
-                )}
+              <div className="card-body">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--t4)', marginBottom: '2px' }}>Email</div>
+                    <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--t1)' }}>{user?.email}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--t4)', marginBottom: '2px' }}>Role</div>
+                    <div style={{ display: 'inline-flex', padding: '2px 8px', borderRadius: 'var(--r-xs)', fontSize: '11px', fontWeight: 600, background: 'var(--info-bg)', color: 'var(--info)', border: '1px solid var(--info-br)', textTransform: 'uppercase' }}>
+                      {user?.role}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--t4)', marginBottom: '2px' }}>Status</div>
+                    <div style={{ fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px', color: user?.isActive ? 'var(--success)' : 'var(--danger)' }}>
+                      <div className={`priority-dot ${user?.isActive ? 'low' : 'critical'}`} style={{ width: '8px', height: '8px' }} />
+                      {user?.isActive ? 'Active' : 'Inactive'}
+                    </div>
+                  </div>
+                  {user?.role === 'volunteer' && (
+                    <div>
+                      <div style={{ fontSize: '12px', color: 'var(--t4)', marginBottom: '2px' }}>Availability</div>
+                      <div style={{ fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px', color: user?.isAvailable ? 'var(--success)' : 'var(--warning)' }}>
+                        <div className={`priority-dot ${user?.isAvailable ? 'low' : 'medium'}`} style={{ width: '8px', height: '8px' }} />
+                        {user?.isAvailable ? 'Available' : 'Busy'}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             <div className="card">
-              <div className="card-header"><div className="card-title">Change Password</div></div>
-              <form onSubmit={changePassword}>
-                <div className="form-group">
-                  <label className="form-label">Current Password</label>
-                  <input className="form-control" type="password" name="currentPassword" value={pwForm.currentPassword} onChange={handlePw} required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">New Password</label>
-                  <input className="form-control" type="password" name="newPassword" value={pwForm.newPassword} onChange={handlePw} required />
-                </div>
-                <button type="submit" className="btn btn-ghost" disabled={saving}>{saving?'Updating…':'Update password'}</button>
-              </form>
+              <div className="card-header">
+                <div className="card-title">Change Password</div>
+              </div>
+              <div className="card-body">
+                <form onSubmit={changePassword}>
+                  <div className="form-group" style={{ marginBottom: '16px' }}>
+                    <label className="form-label" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--t2)', marginBottom: '6px' }}>Current Password</label>
+                    <input className="form-control" type="password" name="currentPassword" value={pwForm.currentPassword} onChange={handlePw} required />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: '20px' }}>
+                    <label className="form-label" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--t2)', marginBottom: '6px' }}>New Password</label>
+                    <input className="form-control" type="password" name="newPassword" value={pwForm.newPassword} onChange={handlePw} required />
+                  </div>
+                  <button type="submit" className="btn-ghost" disabled={saving}>
+                    {saving ? 'Updating…' : 'Update password'}
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
+          
         </div>
       </div>
     </>

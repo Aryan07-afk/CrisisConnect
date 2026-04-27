@@ -23,48 +23,40 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-grid-bg" />
-      <div className="auth-glow" />
-      <div className="auth-card">
-        <div className="auth-logo">
-          <div className="auth-logo-icon">🚨</div>
-          <div>
-            <div className="auth-logo-text">CrisisConnect</div>
-            <div className="auth-logo-sub">Relief Ops Platform</div>
-          </div>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', background: 'var(--bg)' }}>
+      
+      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--brand)', marginBottom: '16px' }}>emergency</div>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', marginBottom: '8px' }}>Sign in to CrisisConnect</h1>
+        <p style={{ fontSize: '14px', color: 'var(--t3)' }}>Enter your credentials to access the relief platform</p>
+      </div>
 
-        <h2 className="auth-title">Sign in</h2>
-        <p className="auth-sub">Enter your credentials to access the platform</p>
-
-        {error && <div className="alert alert-error">{error}</div>}
+      <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '32px' }}>
+        {error && <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger-br)', padding: '10px 14px', borderRadius: 'var(--r-md)', marginBottom: '20px', fontSize: '13px' }}>{error}</div>}
 
         <form onSubmit={submit}>
-          <div className="form-group">
-            <label className="form-label">Email address</label>
-            <input className="form-control" type="email" name="email"
-              placeholder="you@org.com" value={form.email} onChange={handle} required />
+          <div className="form-group" style={{ marginBottom: '20px' }}>
+            <label className="form-label" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--t2)', marginBottom: '8px' }}>Email address</label>
+            <input className="form-control" type="email" name="email" placeholder="you@example.com" value={form.email} onChange={handle} required style={{ height: '40px' }} />
           </div>
-          <div className="form-group">
-            <div className="flex-between" style={{ marginBottom: 6 }}>
-              <label className="form-label" style={{ margin: 0 }}>Password</label>
-              <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
+          
+          <div className="form-group" style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <label className="form-label" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t2)', margin: 0 }}>Password</label>
+              <Link to="/forgot-password" style={{ fontSize: '12px', color: 'var(--brand)', textDecoration: 'none', fontWeight: 500 }}>Forgot password?</Link>
             </div>
-            <input className="form-control" type="password" name="password"
-              placeholder="••••••••" value={form.password} onChange={handle} required />
+            <input className="form-control" type="password" name="password" placeholder="••••••••" value={form.password} onChange={handle} required style={{ height: '40px' }} />
           </div>
-          <button type="submit" className="btn btn-primary full-width mt-2" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign in →'}
+          
+          <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%', height: '44px', justifyContent: 'center', fontSize: '14px', fontWeight: 600 }}>
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
-
-        <p className="auth-link">
-          No account? <Link to="/register">Register here</Link>
-        </p>
-
-        <div className="divider" />
       </div>
+
+      <p style={{ marginTop: '32px', fontSize: '13px', color: 'var(--t3)' }}>
+        No account? <Link to="/register" style={{ color: 'var(--brand)', fontWeight: 600, textDecoration: 'none' }}>Register here</Link>
+      </p>
     </div>
   );
 }

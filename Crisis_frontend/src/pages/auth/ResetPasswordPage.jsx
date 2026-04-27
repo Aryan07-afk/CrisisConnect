@@ -1,90 +1,81 @@
 import { useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../../api';
 
 export default function ResetPasswordPage() {
   const { token } = useParams();
-  const navigate   = useNavigate();
-
-  const [form, setForm]       = useState({ password: '', confirmPassword: '' });
-  const [error, setError]     = useState('');
+  const navigate = useNavigate();
+  
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const handle = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (form.password !== form.confirmPassword) {
-      return setError('Passwords do not match');
+    
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
     }
 
     setLoading(true);
     try {
-      await authAPI.resetPassword(token, { password: form.password });
+      await authAPI.resetPassword(token, { newPassword: password });
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Reset failed. The link may have expired.');
-    } finally { setLoading(false); }
+      setError(err.response?.data?.message || 'Password reset failed. The token may be invalid or expired.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-grid-bg" />
-      <div className="auth-glow" />
-      <div className="auth-card">
-        <div className="auth-logo">
-          <div className="auth-logo-icon">🚨</div>
-          <div>
-            <div className="auth-logo-text">CrisisConnect</div>
-            <div className="auth-logo-sub">Relief Ops Platform</div>
-          </div>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', background: 'var(--bg)' }}>
+      
+      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--brand)', marginBottom: '16px' }}>password</div>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', marginBottom: '8px' }}>Reset Password</h1>
+        <p style={{ fontSize: '14px', color: 'var(--t3)' }}>Create a new password for your account</p>
+      </div>
 
-        <h2 className="auth-title">Reset Password</h2>
-        <p className="auth-sub">Choose a new password for your account</p>
+      <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '32px' }}>
+        {error && <div style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger-br)', padding: '10px 14px', borderRadius: 'var(--r-md)', marginBottom: '20px', fontSize: '13px' }}>{error}</div>}
 
-        {error && <div className="alert alert-error">{error}</div>}
-
-        {success ? (
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ fontSize: '3rem', marginBottom: 16 }}>✅</div>
-            <p style={{ color: 'var(--green)', fontSize: '1rem', fontWeight: 700, marginBottom: 8 }}>
-              Password reset successful!
-            </p>
-            <p style={{ color: 'var(--text2)', fontSize: '.85rem', marginBottom: 20 }}>
-              Redirecting you to sign in…
-            </p>
-            <Link to="/login" className="btn btn-primary full-width">
-              Sign in now →
-            </Link>
-          </div>
-        ) : (
+        {!success ? (
           <form onSubmit={submit}>
-            <div className="form-group">
-              <label className="form-label">New Password</label>
-              <input className="form-control" type="password" name="password"
-                placeholder="Min 6 characters" value={form.password} onChange={handle} required minLength={6} />
+            <div className="form-group" style={{ marginBottom: '16px' }}>
+              <label className="form-label" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--t2)', marginBottom: '8px' }}>New Password</label>
+              <input className="form-control" type="password" placeholder="Min 6 characters" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ height: '40px' }} />
             </div>
-            <div className="form-group">
-              <label className="form-label">Confirm Password</label>
-              <input className="form-control" type="password" name="confirmPassword"
-                placeholder="Re-enter password" value={form.confirmPassword} onChange={handle} required minLength={6} />
+            
+            <div className="form-group" style={{ marginBottom: '24px' }}>
+              <label className="form-label" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--t2)', marginBottom: '8px' }}>Confirm Password</label>
+              <input className="form-control" type="password" placeholder="Repeat new password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required style={{ height: '40px' }} />
             </div>
-            <button type="submit" className="btn btn-primary full-width mt-2" disabled={loading}>
-              {loading ? 'Resetting…' : 'Reset Password →'}
+            
+            <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%', height: '44px', justifyContent: 'center', fontSize: '14px', fontWeight: 600 }}>
+              {loading ? 'Resetting…' : 'Reset Password'}
             </button>
           </form>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '16px 0' }}>
+            <div className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--success)', marginBottom: '16px' }}>check_circle</div>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--t1)', marginBottom: '8px' }}>Password Reset Successful</h3>
+            <p style={{ color: 'var(--t2)', fontSize: '14px', marginBottom: '24px', lineHeight: 1.5 }}>
+              Your password has been successfully updated. You can now sign in with your new credentials.
+            </p>
+            <Link to="/login" className="btn-primary" style={{ display: 'inline-flex', width: '100%', height: '44px', justifyContent: 'center', alignItems: 'center', fontSize: '14px', fontWeight: 600 }}>
+              Go to Login
+            </Link>
+          </div>
         )}
-
-        <p className="auth-link">
-          <Link to="/login">← Back to Sign in</Link>
-        </p>
-
-        <div className="divider" />
       </div>
     </div>
   );
