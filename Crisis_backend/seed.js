@@ -25,6 +25,12 @@ const COORDINATORS = [
 ];
 
 const requestTypes = ['food', 'water', 'shelter', 'medical', 'rescue', 'clothing', 'other'];
+// User.skills enum — mapped from request types so matching still makes sense
+const VALID_SKILLS = ['medical', 'rescue', 'logistics', 'communication', 'general'];
+const skillForRequest = {
+  food: 'logistics', water: 'logistics', shelter: 'logistics', clothing: 'logistics',
+  medical: 'medical', rescue: 'rescue', other: 'general',
+};
 const priorities = ['low', 'medium', 'high', 'critical'];
 const statuses = ['pending', 'assigned', 'in_progress', 'resolved'];
 const victimStatuses = ['submitted', 'reviewing', 'linked', 'resolved', 'closed'];
@@ -107,7 +113,7 @@ const seedData = async () => {
     const volunteers = [];
     for (let i = 0; i < numVolunteers; i++) {
       const baseLoc = locations[i % locations.length];
-      const skill = requestTypes[i % requestTypes.length];
+      const primarySkill = VALID_SKILLS[i % VALID_SKILLS.length];
       const first = firstNames[i % firstNames.length];
       const last = lastNames[(i * 3) % lastNames.length];
       const vol = await User.create({
@@ -115,7 +121,7 @@ const seedData = async () => {
         email: `volunteer${i + 1}@test.com`,
         password: 'password123',
         role: 'volunteer',
-        skills: [skill, getRandomArrayElement(requestTypes)],
+        skills: [primarySkill, getRandomArrayElement(VALID_SKILLS)],
         isAvailable: Math.random() > 0.25,
         location: baseLoc.area,
         coordinates: {
