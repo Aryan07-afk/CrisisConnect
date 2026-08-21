@@ -86,7 +86,7 @@ export default function AssignModal({ initialRequestId, onClose, onSuccess }) {
           {form.requestId && (
             <div style={{ background: 'var(--neutral-bg)', padding: '16px', borderRadius: 'var(--r-md)', border: '1px solid var(--border)', marginBottom: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--t2)' }}>⭐ Recommended Matches</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--t2)' }}><span className="material-symbols-outlined" style={{ fontSize: '14px', verticalAlign: '-2px' }}>star</span> Recommended Matches</span>
                 {loadingMatches && <span style={{ fontSize: '11px', color: 'var(--t4)' }}>Loading…</span>}
               </div>
               {!loadingMatches && bestMatches.length === 0 && (

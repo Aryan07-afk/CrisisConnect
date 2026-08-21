@@ -324,7 +324,7 @@ export default function DashboardPage() {
             Filtering:
             {kpiFilter && <span style={{ background: 'var(--brand-lt)', color: 'var(--brand)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600, textTransform: 'capitalize' }}>{kpiFilter}</span>}
             {chartFilter && <span style={{ background: 'var(--info-bg)', color: 'var(--info)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600, textTransform: 'capitalize' }}>{chartFilter}</span>}
-            <button onClick={() => { setKpiFilter(null); setChartFilter(null); }} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}>✕ Clear</button>
+            <button onClick={() => { setKpiFilter(null); setChartFilter(null); }} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}><span className="material-symbols-outlined" style={{ fontSize: '13px', verticalAlign: '-2px' }}>close</span> Clear</button>
           </div>
         )}
 

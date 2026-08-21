@@ -6,7 +6,7 @@ import Badge from '../../components/common/Badge';
 import Loader from '../../components/common/Loader';
 
 const STATUS_ICON = {
-  submitted: '⏳', reviewing: '🔍', linked: '👤', resolved: '✅', closed: '🔒'
+  submitted: 'schedule', reviewing: 'search', linked: 'person', resolved: 'task_alt', closed: 'lock'
 };
 
 export default function VictimRequestsPage() {
@@ -39,14 +39,14 @@ export default function VictimRequestsPage() {
         actions={
           <Link to="/victim/submit" className="btn btn-sm"
             style={{ background: 'var(--danger)', color: '#fff', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '20px' }}>🆘</span> New SOS
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>emergency</span> New SOS
           </Link>
         }
       />
       <div className="page-body page-enter">
         {loading ? <Loader /> : requests.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">📭</div>
+            <div className="empty-icon"><span className="material-symbols-outlined" style={{ fontSize: '44px' }}>inbox</span></div>
             <p>You haven't submitted any requests yet</p>
             <Link to="/victim/submit" className="btn btn-sm"
               style={{ background: 'var(--danger)', color: '#fff', marginTop: 14 }}>
@@ -60,7 +60,7 @@ export default function VictimRequestsPage() {
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontSize: '1.1rem' }}>{STATUS_ICON[r.status]}</span>
+                      <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--brand)' }}>{STATUS_ICON[r.status]}</span>
                       <span style={{ fontWeight: 700, fontSize: '.95rem', textTransform: 'capitalize' }}>
                         {r.needType} Request
                       </span>
@@ -74,8 +74,8 @@ export default function VictimRequestsPage() {
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: '.78rem', color: 'var(--text3)', marginBottom: 12 }}>
-                  <span>📍 {r.location?.address}{r.location?.area ? `, ${r.location.area}` : ''}</span>
-                  <span>👥 {r.peopleCount} {r.peopleCount === 1 ? 'person' : 'people'}</span>
+                  <span><span className="material-symbols-outlined" style={{ fontSize: '14px', verticalAlign: '-2px' }}>location_on</span> {r.location?.address}{r.location?.area ? `, ${r.location.area}` : ''}</span>
+                  <span><span className="material-symbols-outlined" style={{ fontSize: '14px', verticalAlign: '-2px' }}>groups</span> {r.peopleCount} {r.peopleCount === 1 ? 'person' : 'people'}</span>
                   <span style={{ fontFamily: 'var(--font-mono)' }}>
                     {new Date(r.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                   </span>
@@ -110,7 +110,7 @@ export default function VictimRequestsPage() {
                     borderRadius: 'var(--r)', padding: '8px 12px', marginBottom: 12,
                     fontSize: '.82rem', color: 'var(--blue)'
                   }}>
-                    💬 <strong>Team message:</strong> {r.responseNote}
+                    <strong>Team message:</strong> {r.responseNote}
                   </div>
                 )}
 
@@ -121,7 +121,7 @@ export default function VictimRequestsPage() {
                     borderRadius: 'var(--r)', padding: '8px 12px', marginBottom: 12,
                     fontSize: '.82rem', color: 'var(--green)'
                   }}>
-                    ✅ A volunteer has been assigned: <strong>{r.linkedRequest.title}</strong>
+                    A volunteer has been assigned: <strong>{r.linkedRequest.title}</strong>
                   </div>
                 )}
 

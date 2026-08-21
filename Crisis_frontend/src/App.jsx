@@ -137,7 +137,7 @@ export default function App() {
       {location.pathname === '/' && (
         <Link to="/victim/register" className="hp-floating-sos" title="I Need Help">
           <span className="hp-floating-sos-pulse" />
-          <span style={{ fontSize: '20px' }}>🆘</span>
+          <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>emergency</span>
           <span className="hp-floating-sos-label">I Need Help</span>
         </Link>
       )}

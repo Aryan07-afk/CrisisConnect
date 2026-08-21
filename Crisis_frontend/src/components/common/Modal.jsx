@@ -12,7 +12,7 @@ export default function Modal({ title, onClose, children, footer }) {
       <div className="modal">
         <div className="modal-header">
           <span className="modal-title">{title}</span>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span></button>
         </div>
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-footer">{footer}</div>}

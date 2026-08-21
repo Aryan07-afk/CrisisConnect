@@ -124,7 +124,7 @@ export default function CoordinatorApplicationsPage() {
                         <td>
                           <div className="td-primary">{app.name}</div>
                           <div className="td-secondary">{app.email}</div>
-                          {app.phone && <div className="td-secondary">📞 {app.phone}</div>}
+                          {app.phone && <div className="td-secondary"><span className="material-symbols-outlined" style={{ fontSize: '13px', verticalAlign: '-2px' }}>call</span> {app.phone}</div>}
                         </td>
                         <td>
                           <div className="td-primary">{app.organization || '—'}</div>

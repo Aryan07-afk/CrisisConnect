@@ -29,7 +29,7 @@ export default function VictimLayout() {
           <NavLink to="/victim/dashboard"
             className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
             style={({ isActive }) => isActive ? { color: 'var(--red)', background: 'var(--red-bg)' } : {}}>
-            <span className="nav-icon">🏠</span> Dashboard
+            <span className="nav-icon"><span className="material-symbols-outlined">dashboard</span></span> Dashboard
           </NavLink>
 
           <NavLink to="/victim/submit"
@@ -41,13 +41,13 @@ export default function VictimLayout() {
           <NavLink to="/victim/requests"
             className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
             style={({ isActive }) => isActive ? { color: 'var(--red)', background: 'var(--red-bg)' } : {}}>
-            <span className="nav-icon">📋</span> My Requests
+            <span className="nav-icon"><span className="material-symbols-outlined">receipt_long</span></span> My Requests
           </NavLink>
 
           <NavLink to="/victim/profile"
             className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
             style={({ isActive }) => isActive ? { color: 'var(--red)', background: 'var(--red-bg)' } : {}}>
-            <span className="nav-icon">👤</span> My Profile
+            <span className="nav-icon"><span className="material-symbols-outlined">person</span></span> My Profile
           </NavLink>
         </nav>
 

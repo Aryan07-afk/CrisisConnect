@@ -126,7 +126,7 @@ export default function RequestForm({ initial, onSuccess, onCancel }) {
         </div>
         <button type="button" className="btn btn-ghost btn-xs"
           onClick={() => setShowMap(m => !m)}>
-          {showMap ? '✕ Hide Map' : '🗺️ Pick on Map'}
+          <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: '-3px' }}>{showMap ? 'close' : 'map'}</span> {showMap ? 'Hide Map' : 'Pick on Map'}
         </button>
       </div>
 

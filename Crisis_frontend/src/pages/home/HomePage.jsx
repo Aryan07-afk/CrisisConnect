@@ -6,43 +6,43 @@ import './HomePage.css';
 /* ── data ──────────────────────────────────────────── */
 const FEATURES = [
   {
-    icon: '🆘',
+    icon: 'sos',
     title: 'Structured Help Requests',
     desc: 'Volunteers raise prioritised requests on behalf of victims — food, water, shelter, medical, rescue — with precise location tagging.',
     color: '#2f88ff',
   },
   {
-    icon: '👥',
+    icon: 'groups',
     title: 'Smart Volunteer Assignment',
     desc: 'Coordinators instantly match available volunteers by skill set and location to open requests, eliminating coordination chaos.',
     color: '#3b82f6',
   },
   {
-    icon: '⬡',
+    icon: 'hub',
     title: 'Centralised Monitoring',
     desc: 'Real-time dashboard gives authorities a bird\'s-eye view of all ongoing operations, resource allocation and response timelines.',
     color: '#10b981',
   },
   {
-    icon: '⚡',
+    icon: 'bolt',
     title: 'Bandwidth Efficient',
     desc: 'Built lightweight — no heavy media, minimal payloads — so the platform works reliably even in low-connectivity disaster zones.',
     color: '#f59e0b',
   },
   {
-    icon: '🔐',
+    icon: 'lock',
     title: 'Role-Based Access',
     desc: 'Four distinct roles — Admin, Coordinator, Volunteer, Victim — each with tailored permissions and views suited to their responsibilities.',
     color: '#8b5cf6',
   },
   {
-    icon: '📋',
+    icon: 'receipt_long',
     title: 'Live Activity Feed',
     desc: 'Every status change, note and assignment update is logged and visible — full transparency across the entire relief operation.',
     color: '#f43f5e',
   },
   {
-    icon: '🆘',
+    icon: 'sos',
     title: 'Victim Self-Registration',
     desc: 'Victims can register directly, submit SOS requests with urgency levels, track their request status live and receive updates from the response team.',
     color: '#2f88ff',
@@ -52,7 +52,7 @@ const FEATURES = [
 const ROLES = [
   {
     role: 'Admin',
-    icon: '🛡️',
+    icon: 'shield',
     color: '#2f88ff',
     bg: 'rgba(47,136,255,.08)',
     border: 'rgba(47,136,255,.25)',
@@ -66,7 +66,7 @@ const ROLES = [
   },
   {
     role: 'Coordinator',
-    icon: '🎯',
+    icon: 'assignment_ind',
     color: '#3b82f6',
     bg: 'rgba(59,130,246,.08)',
     border: 'rgba(59,130,246,.25)',
@@ -80,7 +80,7 @@ const ROLES = [
   },
   {
     role: 'Volunteer',
-    icon: '🦺',
+    icon: 'volunteer_activism',
     color: '#10b981',
     bg: 'rgba(16,185,129,.08)',
     border: 'rgba(16,185,129,.25)',
@@ -94,7 +94,7 @@ const ROLES = [
   },
   {
     role: 'Victim',
-    icon: '🆘',
+    icon: 'sos',
     color: '#f43f5e',
     bg: 'rgba(244,63,94,.08)',
     border: 'rgba(244,63,94,.25)',
@@ -171,7 +171,7 @@ function FeatureCard({ feature, index }) {
   return (
     <div ref={ref} className={`hp-feature-card ${inView ? 'hp-in' : ''}`}
       style={{ '--delay': `${index * 80}ms`, '--accent': feature.color }}>
-      <div className="hp-feature-icon">{feature.icon}</div>
+      <div className="hp-feature-icon"><span className="material-symbols-outlined">{feature.icon}</span></div>
       <h3 className="hp-feature-title">{feature.title}</h3>
       <p className="hp-feature-desc">{feature.desc}</p>
     </div>
@@ -187,12 +187,12 @@ function RoleCard({ role, index }) {
         '--rc': role.color, '--rbg': role.bg, '--rborder': role.border
       }}>
       <div className="hp-role-top">
-        <span className="hp-role-icon">{role.icon}</span>
+        <span className="hp-role-icon"><span className="material-symbols-outlined">{role.icon}</span></span>
         <span className="hp-role-name">{role.role}</span>
       </div>
       <ul className="hp-role-list">
         {role.powers.map((p, i) => (
-          <li key={i}><span className="hp-role-check">✓</span>{p}</li>
+          <li key={i}><span className="hp-role-check"><span className="material-symbols-outlined">check</span></span>{p}</li>
         ))}
       </ul>
     </div>
@@ -285,13 +285,13 @@ function NetworkBackground() {
 /* ── Live Activity Ticker ─────────────────────────── */
 function LiveTicker() {
   const items = [
-    '🟢 50+ Help Requests Resolved',
-    '🦺 20 Active Volunteers in the Field',
-    '⚡ 3s Average Response Time',
-    '🆘 Real-time SOS Tracking',
-    '📋 100% Request Accountability',
-    '🗺️ Live Disaster Heatmaps',
-    '🔐 Role-Based Secure Access',
+    '50+ Help Requests Resolved',
+    '20 Active Volunteers in the Field',
+    '3s Average Response Time',
+    'Real-time SOS Tracking',
+    '100% Request Accountability',
+    'Live Disaster Heatmaps',
+    'Role-Based Secure Access',
   ];
   const doubled = [...items, ...items];
   return (
@@ -352,7 +352,7 @@ export default function HomePage() {
             <Link to="/register" className="hp-btn-primary">Get Started →</Link>
           </div>
           <button className="hp-hamburger" onClick={() => setMenuOpen(m => !m)}>
-            {menuOpen ? '✕' : '☰'}
+            <span className="material-symbols-outlined">{menuOpen ? 'close' : 'menu'}</span>
           </button>
         </div>
       </nav>
@@ -448,16 +448,16 @@ export default function HomePage() {
           </div>
           <div className="hp-timeline">
             {[
-              { n: '01', icon: '📝', title: 'Volunteer raises a request', desc: 'An on-field volunteer logs a help request on behalf of victims — specifying type, priority, location and number of people affected.', color: '#2f88ff' },
-              { n: '02', icon: '🎯', title: 'Coordinator reviews & assigns', desc: 'A coordinator reviews the request, sets priority, and assigns an available volunteer with the right skills to handle it.', color: '#10b981' },
-              { n: '03', icon: '🦺', title: 'Volunteer accepts & responds', desc: 'The assigned volunteer accepts the task, begins the operation and updates the status in real-time as work progresses.', color: '#f59e0b' },
-              { n: '04', icon: '✅', title: 'Request resolved & logged', desc: 'Once complete, the request is marked resolved. All activity is logged for accountability and future analysis.', color: '#8b5cf6' },
+              { n: '01', icon: 'edit_note', title: 'Volunteer raises a request', desc: 'An on-field volunteer logs a help request on behalf of victims — specifying type, priority, location and number of people affected.', color: '#2f88ff' },
+              { n: '02', icon: 'assignment_ind', title: 'Coordinator reviews & assigns', desc: 'A coordinator reviews the request, sets priority, and assigns an available volunteer with the right skills to handle it.', color: '#10b981' },
+              { n: '03', icon: 'volunteer_activism', title: 'Volunteer accepts & responds', desc: 'The assigned volunteer accepts the task, begins the operation and updates the status in real-time as work progresses.', color: '#f59e0b' },
+              { n: '04', icon: 'task_alt', title: 'Request resolved & logged', desc: 'Once complete, the request is marked resolved. All activity is logged for accountability and future analysis.', color: '#8b5cf6' },
             ].map((step, i) => {
               const [ref, inView] = useInView();
               return (
                 <div key={i} ref={ref} className={`hp-tl-item ${inView ? 'hp-in' : ''} ${i % 2 === 0 ? 'hp-tl-left' : 'hp-tl-right'}`} style={{ '--delay': `${i * 150}ms`, '--accent': step.color }}>
                   <div className="hp-tl-dot" style={{ background: step.color }}>
-                    <span>{step.icon}</span>
+                    <span className="material-symbols-outlined">{step.icon}</span>
                   </div>
                   <div className="hp-tl-card">
                     <div className="hp-tl-num" style={{ color: step.color }}>{step.n}</div>
@@ -545,7 +545,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div style={{ marginTop: '16px', padding: '12px 16px', background: 'rgba(232,98,42,0.08)', borderRadius: 'var(--r-md)', textAlign: 'center' }}>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--brand)' }}>🔥 Built with passion for disaster relief</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--brand)' }}>Built with passion for disaster relief</span>
               </div>
             </div>
           </div>

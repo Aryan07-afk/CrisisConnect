@@ -80,7 +80,7 @@ export default function VolunteersPage() {
           </select>
           {(filters.isAvailable || filters.skill || search) && (
             <button className="btn btn-ghost btn-sm" onClick={() => { setFilters({ isAvailable: '', skill: '' }); setSearch(''); }}>
-              ✕ Clear
+              <span className="material-symbols-outlined" style={{ fontSize: '13px', verticalAlign: '-2px' }}>close</span> Clear
             </button>
           )}
         </div>

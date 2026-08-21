@@ -98,7 +98,7 @@ export default function AssignmentsPage() {
           </select>
           {(filter || search) && (
             <button className="btn-ghost" style={{ padding: '6px 12px' }} onClick={() => { setFilter(''); setSearch(''); }}>
-              ✕ Clear
+              <span className="material-symbols-outlined" style={{ fontSize: '13px', verticalAlign: '-2px' }}>close</span> Clear
             </button>
           )}
         </div>

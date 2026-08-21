@@ -1499,3 +1499,178 @@ body.dark {
   --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.30), 0 4px 12px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.50);
 }
+
+/* ══════════════════════════════════════════════════════
+   DESIGN REVAMP — overrides everything above.
+   Direction: warm editorial light theme, ink primary
+   buttons, generous whitespace, refined typography.
+   Class names unchanged — purely visual transformation.
+   ══════════════════════════════════════════════════════ */
+
+:root {
+  /* Warm paper neutrals */
+  --page: #f7f6f3;
+  --surface: #ffffff;
+  --raised: #ffffff;
+  --hover: #f5f4f1;
+  --input-bg: #ffffff;
+
+  --border: #e8e6e1;
+  --border-md: #dcd9d3;
+  --border-str: #c9c5bd;
+
+  /* Ink text scale */
+  --t1: #1c1917;
+  --t2: #44403c;
+  --t3: #78716c;
+  --t4: #a8a29e;
+
+  /* Deepened brand — WCAG-friendly on white */
+  --brand: #c2410c;
+  --brand-h: #9a3412;
+  --brand-lt: #fff1e8;
+  --brand-br: #f3c4a4;
+
+  /* Ink for primary actions */
+  --ink: #1c1917;
+  --ink-h: #000000;
+
+  --shadow-card: 0 1px 2px rgba(28,25,23,.04), 0 2px 8px rgba(28,25,23,.03);
+}
+
+body {
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+/* Headings */
+h1, h2, h3 { letter-spacing: -0.025em; color: var(--t1); }
+
+/* ── Sidebar ── */
+.sidebar {
+  background: #fbfaf8;
+}
+.nav-item {
+  padding: 8px 10px;
+  font-size: 13.5px;
+  border-radius: 8px;
+  transition: background .12s ease, color .12s ease;
+}
+.nav-item:hover { background: var(--hover); color: var(--t1); }
+.nav-item.active {
+  background: var(--brand-lt);
+  color: var(--brand);
+}
+.nav-section-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--t4);
+}
+
+/* ── Topbar ── */
+.topbar {
+  height: 64px;
+  padding: 0 32px;
+  background: rgba(255,255,255,.85);
+  backdrop-filter: blur(8px);
+}
+.topbar h1 { font-size: 20px; font-weight: 700; }
+.topbar p { font-size: 13px; color: var(--t3); }
+
+/* ── Cards ── */
+.card {
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+}
+.card-header { padding: 18px 22px 0; }
+.card-title { font-size: 15px; font-weight: 700; }
+
+/* ── Buttons ── */
+.btn-primary,
+button.btn-primary {
+  background: var(--ink);
+  color: #fff;
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-weight: 600;
+  transition: background .15s ease, transform .1s ease;
+}
+.btn-primary:hover { background: var(--ink-h); }
+.btn-primary:active { transform: scale(.98); }
+
+.btn-ghost {
+  border-radius: 10px;
+  font-weight: 500;
+  transition: background .15s ease, border-color .15s ease;
+}
+
+/* ── Tables ── */
+table thead th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--t4);
+  padding: 12px 16px;
+}
+table tbody td { padding: 13px 16px; }
+table tbody tr { transition: background .1s ease; }
+table tbody tr:hover { background: var(--hover); }
+
+/* ── Forms ── */
+.form-control {
+  border-radius: 10px;
+  padding: 9px 12px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.form-label { font-weight: 600; }
+
+/* ── KPI stat cards ── */
+.kpi-card, [class*="kpi"] {
+  border-radius: 14px;
+}
+
+/* ── Modals ── */
+.modal-content, [class*="modal"] {
+  border-radius: 16px;
+}
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-str);
+  border-radius: 999px;
+  border: none;
+}
+
+/* ── Dark mode equivalents ── */
+body.dark {
+  --page: #131311;
+  --surface: #1c1b19;
+  --raised: #232220;
+  --hover: #292826;
+  --input-bg: #232220;
+
+  --border: #33312e;
+  --border-md: #403e3a;
+  --border-str: #55524c;
+
+  --t1: #fafaf9;
+  --t2: #d6d3d1;
+  --t3: #a8a29e;
+  --t4: #78716c;
+
+  --brand: #fb923c;
+  --brand-h: #fdba74;
+  --brand-lt: rgba(251,146,60,.1);
+  --brand-br: rgba(251,146,60,.3);
+
+  --ink: #f5f5f4;
+  --ink-h: #ffffff;
+}
+body.dark .btn-primary,
+body.dark button.btn-primary { color: #1c1917; }
+body.dark .topbar { background: rgba(28,27,25,.85); }
+body.dark .sidebar { background: #191817; }

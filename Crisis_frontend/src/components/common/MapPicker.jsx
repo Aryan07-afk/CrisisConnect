@@ -135,10 +135,10 @@ export default function MapPicker({ onLocationSelect, initialLat, initialLng }) 
         justifyContent: 'space-between', marginBottom: 8
       }}>
         <label className="form-label" style={{ margin: 0 }}>
-          📍 Pick Location on Map
+          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>location_on</span> Pick Location on Map
         </label>
         <button type="button" className="btn btn-ghost btn-xs" onClick={locateMe}>
-          🎯 Use My Location
+          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>my_location</span> Use My Location
         </button>
       </div>
 
@@ -179,7 +179,7 @@ export default function MapPicker({ onLocationSelect, initialLat, initialLng }) 
           fontSize: '.82rem', color: 'var(--text2)',
           display: 'flex', alignItems: 'flex-start', gap: 8
         }}>
-          <span style={{ color: 'var(--accent)', flexShrink: 0 }}>📍</span>
+          <span className="material-symbols-outlined" style={{ color: 'var(--accent)', flexShrink: 0, fontSize: '18px' }}>place</span>
           <span>{address}</span>
         </div>
       )}
