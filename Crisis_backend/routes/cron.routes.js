@@ -9,7 +9,12 @@ const { checkEscalations } = require('../services/escalation.service');
  *   Header: x-cron-secret: <CRON_SECRET>
  */
 router.get('/escalations', async (req, res) => {
-  const secret = req.get('x-cron-secret') || req.query.secret;
+  // Vercel Cron automatically sends "Authorization: Bearer <CRON_SECRET>"
+  // when a CRON_SECRET env var exists; manual calls can use x-cron-secret or ?secret=
+  const authHeader = req.get('authorization');
+  const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const secret = bearer || req.get('x-cron-secret') || req.query.secret;
+
   if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
     return res.status(401).json({ success: false, message: 'Unauthorised' });
   }
