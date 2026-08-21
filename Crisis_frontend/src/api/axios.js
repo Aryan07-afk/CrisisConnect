@@ -1,10 +1,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // On Vercel the backend lives on its own domain; locally the Vite proxy handles /api
-  baseURL: import.meta.env.VITE_API_URL
-    ? `${import.meta.env.VITE_API_URL}/api`
-    : '/api',
+  // On Vercel the backend lives on its own domain; locally the Vite proxy handles /api.
+  // Strip trailing slashes so VITE_API_URL="https://x.vercel.app/" doesn't produce "//api".
+  baseURL: (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '') + '/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
