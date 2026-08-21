@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CrisisConnect — Deployment Report</title>
+<style>
+  :root {
+    --page: #0f1117;
+    --surface: #181a20;
+    --raised: #1e2028;
+    --border: #2a2d36;
+    --t1: #f0f2f5;
+    --t2: #c8ccd4;
+    --t3: #8b8f9a;
+    --brand: #e8622a;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --success: #22c55e;
+    --info: #3b82f6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--page);
+    color: var(--t2);
+    line-height: 1.65;
+    padding: 40px 20px;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  header {
+    text-align: center;
+    padding: 48px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 32px;
+  }
+  header h1 { font-size: 32px; color: var(--t1); letter-spacing: -0.5px; }
+  header h1 span { color: var(--brand); }
+  header .subtitle { color: var(--t3); font-size: 15px; margin-top: 8px; }
+  header .meta { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+  .chip {
+    font-size: 12px; font-weight: 600;
+    padding: 4px 14px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--raised);
+  }
+  .chip.ok { color: var(--success); border-color: rgba(34,197,94,.35); }
+  h2 {
+    font-size: 21px; color: var(--t1);
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .issue {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .issue-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .num {
+    width: 26px; height: 26px; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--raised); border: 1px solid var(--border);
+    border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--brand);
+  }
+  .issue h3 { font-size: 16px; color: var(--t1); flex: 1; min-width: 200px; }
+  .tag {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .5px; padding: 3px 10px; border-radius: 999px;
+  }
+  .tag.critical { background: rgba(239,68,68,.12); color: var(--danger); border: 1px solid rgba(239,68,68,.3); }
+  .tag.high     { background: rgba(245,158,11,.12); color: var(--warning); border: 1px solid rgba(245,158,11,.3); }
+  .tag.medium   { background: rgba(59,130,246,.12); color: var(--info); border: 1px solid rgba(59,130,246,.3); }
+  .issue p { font-size: 14px; margin: 6px 0; }
+  .issue .fix {
+    margin-top: 10px; padding: 10px 14px;
+    background: rgba(34,197,94,.07);
+    border-left: 3px solid var(--success);
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+  }
+  .issue .fix strong { color: var(--success); }
+  code, pre {
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 13px;
+  }
+  code {
+    background: var(--raised);
+    border: 1px solid var(--border);
+    padding: 1px 6px; border-radius: 5px;
+    color: #f9a870;
+  }
+  pre {
+    background: #12141a;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    margin: 10px 0;
+    color: var(--t2);
+  }
+  pre b { color: var(--danger); font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  th { color: var(--t3); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+  td:first-child { color: var(--t1); font-weight: 600; white-space: nowrap; }
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+  }
+  .stat .n { font-size: 30px; font-weight: 800; color: var(--brand); }
+  .stat .l { font-size: 12px; color: var(--t3); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+  footer {
+    text-align: center; color: var(--t3);
+    font-size: 13px; margin-top: 48px; padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>🚨 CrisisConnect <span>—</span> Deployment Report</h1>
+    <p class="subtitle">Issues encountered while deploying to Vercel &amp; how they were resolved</p>
+    <div class="meta">
+      <span class="chip ok">✅ Status: Deployed &amp; Operational</span>
+      <span class="chip">Frontend: Vercel (React + Vite)</span>
+      <span class="chip">Backend: Vercel Serverless (Node/Express)</span>
+      <span class="chip">Database: MongoDB Atlas</span>
+    </div>
+  </header>
+
+  <div class="summary">
+    <div class="stat"><div class="n">9</div><div class="l">Issues Found</div></div>
+    <div class="stat"><div class="n">9</div><div class="l">Issues Resolved</div></div>
+    <div class="stat"><div class="n">3</div><div class="l">Code Fixes Shipped</div></div>
+    <div class="stat"><div class="n">100%</div><div class="l">Login Success Rate</div></div>
+  </div>
+
+  <h2>Phase 1 — Local Setup &amp; Database Seeding</h2>
+
+  <div class="issue">
+    <div class="issue-head"><span class="num">1</span><h3>MongoDB URI not being read (<code>undefined</code>)</h3><span class="tag critical">Critical</span></div>
+    <p><code>node seed.js</code> failed with <code>The uri parameter to openUri() must be a string, got "undefined"</code>.</p>
+    <p><strong>Root cause:</strong> two problems in the <code>.env</code> file — the variable was named <code>MONGODB_URI</code> while the code reads <code>process.env.MONGO_URI</code>, and every line had leading whitespace, so dotenv registered keys like <code>"   MONGO_URI"</code>.</p>
+    <div class="fix"><strong>Fix:</strong> Renamed the variable to <code>MONGO_URI</code> and rewrote the <code>.env</code> with no leading spaces.</div>
+  </div>
+
+  <div class="issue">
+    <div class="issue-head"><span class="num">2</span><h3>Incomplete Atlas connection string</h3><span class="tag high">High</span></div>
+    <p>The copied URI still contained the <code>&lt;db_password&gt;</code> placeholder and no database name, which would have landed all data in the default <code>test</code> database.</p>
+    <div class="fix"><strong>Fix:</strong> Replaced the placeholder with the real credentials and appended <code>/crisisconnect</code> before the query string.</div>
+  </div>
+
+  <div class="issue">
+    <div class="issue-head"><span class="num">3</span><h3>Seed script validation errors</h3><span class="tag medium">Medium</span></div>
+    <p>Seeding failed twice with Mongoose validation errors:</p>
+    <ul style="margin: 8px 0 8px 24px; font-size: 14px;">
+      <li><code>`food` is not a valid enum value for path `skills.0`</code> — the script used request types ("food", "water") as volunteer skills, but the User schema only allows medical / rescue / logistics / communication / general.</li>
+      <li><code>peopleCount (0) is less than minimum allowed value (1)</code> — a broken random-integer helper could produce 0.</li>
+    </ul>
+    <div class="fix"><strong>Fix:</strong> Mapped request types onto valid skill enum values and corrected the <code>getRandomInt</code> formula to <code>min + floor(random() × (max − min + 1))</code>, verified over 2,000 samples.</div>
+  </div>
+
+  <h2>Phase 2 — Backend on Vercel (Serverless)</h2>
+
+  <div class="issue">
+    <div class="issue-head"><span class="num">4</span><h3>Crash on startup: read-only filesystem</h3><span class="tag critical">Critical</span></div>
+    <p>Every request returned HTTP 500. Logs showed:</p>
+    <pre>Error: ENOENT: no such file or directory, mkdir '/var/task/Crisis_backend/uploads/coordinator-docs'</pre>
+    <p><strong>Root cause:</strong> the upload middleware ran <code>fs.mkdirSync()</code> at module load time, but Vercel's serverless filesystem (<code>/var/task</code>) is read-only. The process died before serving any request.</p>
+    <div class="fix"><strong>Fix:</strong> Wrapped directory creation in try/catch with a fallback to the ephemeral writable <code>/tmp</code> directory when running serverless.</div>
+  </div>
+
+  <div class="issue">
+    <div class="issue-head"><span class="num">5</span><h3>Scheduled escalation job can't run on serverless</h3><span class="tag high">High</span></div>
+    <p>The escalation service relied on <code>setInterval(checkEscalations, 60000)</code> inside <code>app.listen()</code>. Serverless instances sleep between requests, so the interval never fires reliably.</p>
+    <div class="fix"><strong>Fix:</strong> Created a protected endpoint <code>GET /api/cron/escalations</code> (authenticated via <code>CRON_SECRET</code>, supporting both Vercel's automatic <code>Authorization: Bearer</code> header and manual <code>x-cron-secret</code>), invocable by Vercel Cron Jobs or any external scheduler. The app now skips <code>listen()</code> entirely when the <code>VERCEL</code> env var is present.</div>
+  </div>
+
+  <h2>Phase 3 — Frontend Build &amp; Deploy</h2>
+
+  <div class="issue">
+    <div class="issue-head"><span class="num">6</span><h3>npm peer-dependency conflict breaks install</h3><span class="tag high">High</span></div>
+    <p>Vercel's build failed at <code>npm install</code>: <code>@vitejs/plugin-react@4.x</code> declares support for Vite 4–7, but the project uses Vite 8. Local installs only worked because of a legacy flag.</p>
+    <div class="fix"><strong>Fix:</strong> Added <code>Crisis_frontend/.npmrc</code> containing <code>legacy-peer-deps=true</code> so Vercel's npm resolves identically to local development.</div>
+  </div>
+
+  <div class="issue">
+    <div class="issue-head"><span class="num">7</span><h3>Case-sensitive filenames break the Linux build</h3><span class="tag critical">Critical</span></div>
+    <p>Vite's bundler failed with an unresolvable import of <code>src/App.jsx</code>. The files on disk were named <code>Homepage.jsx</code> / <code>Homepage.css</code>, but imports referenced <code>HomePage</code>. Windows filesystems are case-insensitive (local builds worked); Vercel's Linux builders are case-sensitive.</p>
+    <div class="fix"><strong>Fix:</strong> Renamed the files via <code>git mv</code> and ran a full codebase scan confirming every import now matches its target file's exact casing.</div>
+  </div>
+
+  <h2>Phase 4 — Runtime Integration (CORS)</h2>
+
+  <div class="issue">
+    <div class="issue-head"><span class="num">8</span><h3>Missing CORS headers block browser login</h3><span class="tag critical">Critical</span></div>
+    <p>The API returned successful responses to curl but browsers received <code>Login failed</code>: the backend's <code>CORS_ORIGIN</code> didn't include the frontend's production URL, so no <code>Access-Control-Allow-Origin</code> header was emitted. Additionally, requests from Vercel's auto-generated deployment aliases (e.g. <code>*-git-main-*.vercel.app</code>) were rejected because CORS matches hostnames exactly.</p>
+    <div class="fix"><strong>Fix:</strong> Set <code>CORS_ORIGIN</code> to the frontend URL and replaced the static origin list with a check function that also accepts any <code>crisis-connect-*.vercel.app</code> deployment alias.</div>
+  </div>
+
+  <div class="issue">
+    <div class="issue-head"><span class="num">9</span><h3>Double-slash URL from trailing slash in env var</h3><span class="tag critical">Critical</span></div>
+    <p>Even after the CORS fix, login produced <code>net::ERR_FAILED</code>. The browser console revealed the true culprit:</p>
+    <pre>POST https://crisis-connect-sandy.vercel.app<b>//api</b>/auth/login net::ERR_FAILED</pre>
+    <p><code>VITE_API_URL</code> had been configured with a trailing slash; axios concatenated it with <code>/api</code>, producing <code>//api/...</code> — a path Vercel's router doesn't map to the backend function, so requests never arrived (and carried no CORS headers).</p>
+    <div class="fix"><strong>Fix:</strong> Corrected the environment variable, and hardened <code>axios.js</code> to strip trailing slashes from <code>VITE_API_URL</code> at runtime so the class of bug cannot recur.</div>
+  </div>
+
+  <h2>Final Verification</h2>
+  <table>
+    <tr><th>Check</th><th>Result</th></tr>
+    <tr><td>Frontend loads (HTTPS 200)</td><td>✅ Pass</td></tr>
+    <tr><td>API URL correctly baked into bundle</td><td>✅ Pass</td></tr>
+    <tr><td>Login returns JWT + admin profile</td><td>✅ Pass</td></tr>
+    <tr><td>Authenticated dashboard stats (50 requests, 24 volunteers)</td><td>✅ Pass</td></tr>
+    <tr><td>CORS preflight + actual request headers</td><td>✅ Pass</td></tr>
+    <tr><td>Seed data present in Atlas</td><td>✅ Pass</td></tr>
+  </table>
+
+  <h2>Lessons Learned</h2>
+  <table>
+    <tr><th>Lesson</th><th>Applies To</th></tr>
+    <tr><td>Serverless ≠ a normal server: read-only disks, no persistent processes, ephemeral temp storage</td><td>Uploads, cron jobs</td></tr>
+    <tr><td>Build environments are case-sensitive even if your dev machine isn't</td><td>File naming, imports</td></tr>
+    <tr><td>Environment variables are baked into frontend bundles at build time — changing them requires a redeploy</td><td>VITE_*</td></tr>
+    <tr><td>Browsers enforce CORS; curl does not — always test through the browser</td><td>API integration</td></tr>
+    <tr><td>Validate config values defensively (trailing slashes, casing) rather than trusting them</td><td>All env-driven URLs</td></tr>
+  </table>
+
+  <footer>
+    CrisisConnect — Linking Help, Saving Lives · Deployment report generated August 2026<br/>
+    Commits <code>f6319a2</code> → <code>881a2ea</code> on <code>main</code>
+  </footer>
+
+</div>
+</body>
+</html>
