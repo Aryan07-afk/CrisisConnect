@@ -67,7 +67,7 @@ const descriptions = {
 };
 
 const getRandomArrayElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const getRandomInt = (min, max) => Math.floor(Math.random() * (min + Math.random() * (max - min + 1)));
+const getRandomInt = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
 
 // Scatter around a base city so proximity matching has meaningful clusters
 const getRandomLocation = () => {
