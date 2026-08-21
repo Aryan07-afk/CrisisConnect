@@ -18,13 +18,24 @@ const app = express();
 // ── Security Middleware ────────────────────────────────
 app.use(helmet());
 
-// CORS — restrict to frontend origin in production
+// CORS — restrict to frontend origin(s) in production.
+// CORS_ORIGIN accepts comma-separated exact URLs. Additionally, any
+// *.vercel.app alias of this project's deployments is accepted so that
+// preview/git URLs keep working.
 const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(',')
+  ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
   : ['http://localhost:3000'];
 
+const corsOriginCheck = (origin, callback) => {
+  // Allow non-browser tools (curl, Postman) which send no Origin
+  if (!origin) return callback(null, true);
+  if (allowedOrigins.includes(origin)) return callback(null, true);
+  if (/^https:\/\/crisis-connect-[a-z0-9-]+\.vercel\.app$/.test(origin)) return callback(null, true);
+  return callback(new Error('Not allowed by CORS'));
+};
+
 app.use(cors({
-  origin: allowedOrigins,
+  origin: corsOriginCheck,
   credentials: true,
 }));
 
