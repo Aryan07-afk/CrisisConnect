@@ -1,10 +1,18 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '..', 'uploads', 'coordinator-docs');
-if (!fs.existsSync(uploadDir)) {
+// Ensure upload directory exists.
+// On read-only filesystems (e.g. Vercel serverless) fall back to /tmp —
+// note such files are ephemeral and won't persist between invocations.
+let uploadDir = path.join(__dirname, '..', 'uploads', 'coordinator-docs');
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (err) {
+  uploadDir = path.join(os.tmpdir(), 'coordinator-docs');
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
