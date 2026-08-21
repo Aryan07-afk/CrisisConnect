@@ -983,3 +983,44 @@ blockquote {
 @media (max-width: 600px) {
   .hp-team-grid-v2 { grid-template-columns: 1fr; }
 }
+
+/* ══════════════════════════════════════════════════════
+   HOMEPAGE POLARIS PASS — clean, flat, Inter-first
+   ══════════════════════════════════════════════════════ */
+
+.hp-nav {
+  background: rgba(255,255,255,.9);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+
+.hp-btn-primary {
+  background: var(--ink, #303030);
+  border-radius: 8px;
+  font-weight: 500;
+  box-shadow: 0 1px 0 rgba(0,0,0,.07);
+}
+.hp-btn-primary:hover { background: var(--ink-h, #111); }
+.hp-btn-ghost {
+  border: 1px solid var(--border-md);
+  border-radius: 8px;
+  color: var(--t1);
+  font-weight: 400;
+  box-shadow: 0 1px 0 rgba(0,0,0,.05);
+}
+
+.hp-hero-title { letter-spacing: -0.02em; }
+.hp-section-title { letter-spacing: -0.02em; }
+
+.hp-feature-card {
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgba(0,0,0,.05);
+}
+.hp-feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.hp-role-card, .hp-tl-card { border-radius: 12px; }
+
+.hp-ticker-wrap { opacity: .7; }
