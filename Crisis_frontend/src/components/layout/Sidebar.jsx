@@ -8,6 +8,7 @@ const navItems = [
   { to: '/app/requests',        icon: 'emergency',       label: 'Help Requests',   roles: ['admin','coordinator','volunteer'] },
   { to: '/app/users',           icon: 'manage_accounts', label: 'User Management', roles: ['admin'] },
   { to: '/app/coordinator-applications', icon: 'assignment_ind', label: 'Applications', roles: ['admin'] },
+  { to: '/app/audit-log',       icon: 'history',         label: 'Audit Log',       roles: ['admin'] },
   { to: '/app/volunteers',      icon: 'groups',          label: 'Volunteers',      roles: ['admin','coordinator'] },
   { to: '/app/assignments',     icon: 'assignment',      label: 'Assignments',     roles: ['coordinator','volunteer'] },
   { to: '/app/victim-requests', icon: 'local_hospital',  label: 'Victim Requests', roles: ['coordinator'] },

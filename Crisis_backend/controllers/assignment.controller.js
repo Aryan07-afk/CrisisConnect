@@ -11,6 +11,7 @@ const createAssignment = async (req, res) => {
       requestId,
       volunteerId,
       assignedById: req.user._id,
+      assignedByUser: req.user,
       skipSkillCheck,
     });
     // Skill-gating soft block: return warning instead of creating

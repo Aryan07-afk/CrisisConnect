@@ -16,6 +16,7 @@ import ProfilePage          from './pages/auth/ProfilePage';
 import VictimRequestsAdmin  from './pages/victim/VictimRequestsAdmin';
 import UsersPage            from './pages/users/UsersPage';
 import CoordinatorApplicationsPage from './pages/users/CoordinatorApplicationsPage';
+import AuditLogPage              from './pages/audit/AuditLogPage';
 
 import VictimLayout         from './pages/victim/VictimLayout';
 import VictimLoginPage      from './pages/victim/VictimLoginPage';
@@ -113,6 +114,7 @@ function AppRoutes() {
         <Route path="victim-requests" element={<VictimRequestsAdmin />} />
         <Route path="users"           element={<PrivateRoute allowedRoles={['admin']}><UsersPage /></PrivateRoute>} />
         <Route path="coordinator-applications" element={<PrivateRoute allowedRoles={['admin']}><CoordinatorApplicationsPage /></PrivateRoute>} />
+        <Route path="audit-log"       element={<PrivateRoute allowedRoles={['admin']}><AuditLogPage /></PrivateRoute>} />
         <Route path="profile"         element={<ProfilePage />} />
       </Route>
 

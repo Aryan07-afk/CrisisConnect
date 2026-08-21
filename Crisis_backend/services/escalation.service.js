@@ -5,6 +5,7 @@ const HelpRequest = require('../models/HelpRequest');
  * Marks them as escalated.
  */
 const checkEscalations = async () => {
+  let escalatedCount = 0;
   try {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
@@ -17,6 +18,7 @@ const checkEscalations = async () => {
 
     if (expiredRequests.length > 0) {
       console.log(`🚨 Escalating ${expiredRequests.length} pending requests.`);
+      escalatedCount = expiredRequests.length;
       for (const req of expiredRequests) {
         req.escalated = true;
         req.escalatedAt = new Date();
@@ -26,6 +28,7 @@ const checkEscalations = async () => {
   } catch (error) {
     console.error('Error in escalation check routine:', error);
   }
+  return escalatedCount;
 };
 
 module.exports = {

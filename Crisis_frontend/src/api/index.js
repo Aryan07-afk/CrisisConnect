@@ -64,6 +64,11 @@ export const coordinatorApplicationsAPI = {
   review:    (id, data) => api.patch(`/coordinator-applications/${id}/review`, data),
 };
 
+// ── AUDIT LOG ────────────────────────────────────────
+export const auditAPI = {
+  getAll: (params) => api.get('/audit', { params }),
+};
+
 // ── VICTIM ────────────────────────────────────────────
 export const victimAPI = {
   // Victim actions

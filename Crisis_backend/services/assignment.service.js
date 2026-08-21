@@ -3,11 +3,12 @@ const HelpRequest = require('../models/HelpRequest');
 const User = require('../models/User');
 const paginate = require('../utils/pagination');
 const { sendCriticalAssignmentEmail } = require('./email.service');
+const { recordAudit } = require('./audit.service');
 
 /**
  * Assign a volunteer to a help request.
  */
-const createAssignment = async ({ requestId, volunteerId, assignedById, skipSkillCheck }) => {
+const createAssignment = async ({ requestId, volunteerId, assignedById, assignedByUser, skipSkillCheck }) => {
   const [helpRequest, volunteer] = await Promise.all([
     HelpRequest.findById(requestId),
     User.findOne({ _id: volunteerId, role: 'volunteer', isActive: true, isAvailable: true }),
@@ -76,6 +77,17 @@ const createAssignment = async ({ requestId, volunteerId, assignedById, skipSkil
   // Send email if priority is critical
   if (helpRequest.priority === 'critical') {
     sendCriticalAssignmentEmail(volunteer, helpRequest).catch(() => {});
+  }
+
+  if (assignedByUser) {
+    recordAudit({
+      actor: assignedByUser,
+      action: 'assignment_created',
+      targetType: 'HelpRequest',
+      targetId: helpRequest._id,
+      targetLabel: helpRequest.title,
+      meta: { volunteer: volunteer.email },
+    });
   }
 
   return assignment;
@@ -207,6 +219,14 @@ const deleteAssignment = async (assignmentId, requestingUser) => {
 
   // Free volunteer
   await User.findByIdAndUpdate(assignment.volunteer, { isAvailable: true });
+
+  recordAudit({
+    actor: requestingUser,
+    action: 'assignment_cancelled',
+    targetType: 'HelpRequest',
+    targetId: assignment.request,
+    meta: { volunteer: assignment.volunteer },
+  });
 };
 
 /**

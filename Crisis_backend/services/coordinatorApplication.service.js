@@ -3,6 +3,7 @@ const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
 const { sendWelcomeEmail, sendApplicationReceivedEmail, sendApplicationRejectedEmail } = require('./email.service');
 const paginate = require('../utils/pagination');
+const { recordAudit } = require('./audit.service');
 
 /**
  * Submit a new coordinator application.
@@ -125,6 +126,14 @@ const reviewApplication = async (applicationId, adminUser, { action, rejectionRe
     application.reviewedAt = new Date();
     await application.save();
 
+    recordAudit({
+      actor: adminUser,
+      action: 'coordinator_approved',
+      targetType: 'CoordinatorApplication',
+      targetId: application._id,
+      targetLabel: application.email,
+    });
+
     // Send welcome email to the new coordinator
     sendWelcomeEmail({ name: user.name, email: user.email, role: 'coordinator' }).catch(() => {});
 
@@ -137,6 +146,19 @@ const reviewApplication = async (applicationId, adminUser, { action, rejectionRe
     application.reviewedBy = adminUser._id;
     application.reviewedAt = new Date();
     await application.save();
+
+    // Purge stored credentials from rejected applications
+    application.password = undefined;
+    await application.save({ validateBeforeSave: false });
+
+    recordAudit({
+      actor: adminUser,
+      action: 'coordinator_rejected',
+      targetType: 'CoordinatorApplication',
+      targetId: application._id,
+      targetLabel: application.email,
+      meta: { reason: application.rejectionReason },
+    });
 
     // Notify applicant of rejection
     sendApplicationRejectedEmail(

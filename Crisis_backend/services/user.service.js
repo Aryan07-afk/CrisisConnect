@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const paginate = require('../utils/pagination');
+const { recordAudit } = require('./audit.service');
 
 /**
  * List users with optional role / isActive filters + pagination.
@@ -95,6 +96,30 @@ const updateUser = async (targetUserId, requestingUser, body) => {
     err.statusCode = 404;
     throw err;
   }
+
+  // Audit significant admin changes
+  if (isAdmin && !isSelf) {
+    if (updates.role && updates.role !== targetDoc.role) {
+      recordAudit({
+        actor: requestingUser,
+        action: 'user_role_changed',
+        targetType: 'User',
+        targetId: user._id,
+        targetLabel: user.email,
+        meta: { from: targetDoc.role, to: updates.role },
+      });
+    }
+    if (updates.isActive !== undefined && updates.isActive !== targetDoc.isActive) {
+      recordAudit({
+        actor: requestingUser,
+        action: updates.isActive ? 'user_activated' : 'user_deactivated',
+        targetType: 'User',
+        targetId: user._id,
+        targetLabel: user.email,
+      });
+    }
+  }
+
   return user;
 };
 
@@ -121,6 +146,15 @@ const toggleUserStatus = async (userId, requestingUser) => {
 
   user.isActive = !user.isActive;
   await user.save();
+
+  recordAudit({
+    actor: requestingUser,
+    action: user.isActive ? 'user_activated' : 'user_deactivated',
+    targetType: 'User',
+    targetId: user._id,
+    targetLabel: user.email,
+  });
+
   return { isActive: user.isActive };
 };
 
@@ -146,6 +180,15 @@ const deleteUser = async (userId, requestingUser) => {
   }
 
   await user.deleteOne();
+
+  recordAudit({
+    actor: requestingUser,
+    action: 'user_deleted',
+    targetType: 'User',
+    targetId: user._id,
+    targetLabel: user.email,
+    meta: { role: user.role },
+  });
 };
 
 module.exports = { getAllUsers, getUserById, updateUser, toggleUserStatus, deleteUser };

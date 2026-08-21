@@ -53,6 +53,8 @@ app.use('/api/assignments', require('./routes/assignment.routes'));
 app.use('/api/dashboard',   require('./routes/dashboard.routes'));
 app.use('/api/victim',      require('./routes/victim.routes'));
 app.use('/api/coordinator-applications', require('./routes/coordinatorApplication.routes'));
+app.use('/api/audit',       require('./routes/audit.routes'));
+app.use('/api/cron',        require('./routes/cron.routes'));
 
 // Health check
 app.get('/', (req, res) => {
@@ -75,7 +77,8 @@ let escalationInterval;
 
 const { checkEscalations } = require('./services/escalation.service');
 
-if (process.env.NODE_ENV !== 'test') {
+// On Vercel the app runs as a serverless function — never listen there
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     // Run escalation check every minute
